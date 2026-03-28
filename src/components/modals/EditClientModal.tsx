@@ -5,6 +5,7 @@ import { Modal } from '../Modal';
 import { useStore, Client } from '../../store';
 import { extractBrandFromUrl } from '../../lib/utils';
 import { BrandSuggestionModal } from './BrandSuggestionModal';
+import { useTranslation } from 'react-i18next';
 
 interface EditClientModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface EditClientModalProps {
 }
 
 export function EditClientModal({ isOpen, onClose, client }: EditClientModalProps) {
+  const { t } = useTranslation();
   const updateClient = useStore((state) => state.updateClient);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -45,7 +47,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
 
   const handleWebsiteBlur = async () => {
     if (!formData.website || client.logo) return;
-    
+
     setIsExtracting(true);
     try {
       const brandData = await extractBrandFromUrl(formData.website);
@@ -66,10 +68,10 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
         await updateClient(client.id, {
           logo: suggestedBrand.logo
         });
-        toast.success('Logo atualizado com sucesso!');
+        toast.success(t('clients.logoUpdated'));
       } catch (error) {
         console.error('Error updating brand:', error);
-        toast.error('Erro ao atualizar logo');
+        toast.error(t('clients.errorUpdateLogo'));
       }
     }
     setShowBrandModal(false);
@@ -81,10 +83,9 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
     try {
       updateClient(client.id, {
         ...formData,
-        logo: formData.name.charAt(0).toUpperCase() || 'C',
       });
       onClose();
-      toast.success('Cliente atualizado com sucesso!');
+      toast.success(t('clients.updated'));
     } finally {
       setIsSubmitting(false);
     }
@@ -92,10 +93,10 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Editar Cliente">
+      <Modal isOpen={isOpen} onClose={onClose} title={t('clients.editClient')}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Nome da Empresa</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.companyName')}</label>
             <input
               required
               type="text"
@@ -105,14 +106,13 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
             />
           </div>
 
-          {/* Website + Extract */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Site da Empresa</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.website')}</label>
             <div className="flex gap-2 relative">
               <input
                 type="url"
                 className="flex-1 bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface pr-10"
-                placeholder="https://empresa.com.br"
+                placeholder={t('clients.websitePlaceholder')}
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 onBlur={handleWebsiteBlur}
@@ -127,7 +127,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Setor / Indústria</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.industry')}</label>
               <input
                 required
                 type="text"
@@ -137,7 +137,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Máx. Tarefas Simultâneas</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.maxTasks')}</label>
               <input
                 required
                 type="number"
@@ -150,7 +150,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Contato Principal</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.contact')}</label>
             <input
               required
               type="text"
@@ -162,7 +162,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Email</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.email')}</label>
               <input
                 required
                 type="email"
@@ -172,7 +172,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Telefone</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.phone')}</label>
               <input
                 required
                 type="tel"
@@ -184,7 +184,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Status</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.statusLabel')}</label>
             <select
               className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
               value={formData.status}
@@ -201,14 +201,14 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container-high transition-colors"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="px-6 py-2 rounded-xl text-sm font-medium bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50"
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+              {isSubmitting ? t('common.saving') : t('clients.saveChanges')}
             </button>
           </div>
         </form>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../Modal';
 import { useStore } from '../../store';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface NewProjectModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface NewProjectModalProps {
 }
 
 export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
+  const { t } = useTranslation();
   const addProject = useStore((state) => state.addProject);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +33,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
         team: 1,
         createdAt: new Date().toISOString(),
       });
-      toast.success('Projeto criado com sucesso!');
+      toast.success(t('projects.created'));
       onClose();
       setFormData({
         name: '',
@@ -42,19 +44,19 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
       });
     } catch (error) {
       console.error('Error creating project:', error);
-      toast.error('Erro ao criar projeto');
+      toast.error(t('projects.errorCreate'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Novo Projeto">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('projects.new')}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-on-surface mb-1">
-              Nome do Projeto
+              {t('projects.nameLabel')}
             </label>
             <input
               required
@@ -62,30 +64,30 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface"
-              placeholder="Ex: Redesign do Site"
+              placeholder={t('projects.namePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-on-surface mb-1">
-              Descrição
+              {t('projects.descriptionLabel')}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface resize-none h-24"
-              placeholder="Descreva o objetivo do projeto..."
+              placeholder={t('projects.descriptionPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-on-surface mb-1">
-                Fase Inicial
+                {t('projects.initialStage')}
               </label>
               <select
                 value={formData.stage}
-                onChange={(e) => setFormData({ ...formData, stage: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, stage: e.target.value as 'Planejamento' | 'Em Andamento' | 'Revisão' | 'Finalizado' })}
                 className="w-full px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface"
               >
                 <option value="Planejamento">Planejamento</option>
@@ -95,7 +97,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-on-surface mb-1">
-                Prazo Estimado
+                {t('projects.dueDate')}
               </label>
               <input
                 required
@@ -114,14 +116,14 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors"
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
             className="px-6 py-2 bg-primary text-on-primary text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {isSubmitting ? 'Criando...' : 'Criar Projeto'}
+            {isSubmitting ? t('projects.creating') : t('projects.create')}
           </button>
         </div>
       </form>

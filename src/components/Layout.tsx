@@ -28,12 +28,6 @@ const navItems: NavItem[] = [
   { iconName: 'solar:settings-linear',               labelKey: 'nav.settings',  path: '/settings',  roles: ['admin', 'socio', 'seeder'] },
 ];
 
-const roleLabels: Record<string, string> = {
-  admin: 'Admin',
-  socio: 'Sócio',
-  seeder: 'Funcionário',
-  cliente: 'Cliente',
-};
 
 export function Layout() {
   const { t } = useTranslation();
@@ -96,7 +90,7 @@ export function Layout() {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium text-on-surface truncate">{displayName}</span>
-              <span className="text-[11px] text-on-surface-variant/70">{roleLabels[session.role]}</span>
+              <span className="text-[11px] text-on-surface-variant/70">{t(`layout.roles.${session.role}`)}</span>
             </div>
           </div>
           <button
@@ -104,7 +98,7 @@ export function Layout() {
             className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm nav-inactive"
           >
             <LogOut className="w-4 h-4" />
-            <span>Trocar perfil</span>
+            <span>{t('layout.logout')}</span>
           </button>
         </div>
       </aside>
@@ -121,7 +115,7 @@ export function Layout() {
             <Search className="w-3.5 h-3.5 text-on-surface-variant/60" />
             <input
               type="text"
-              placeholder="Buscar clientes, tarefas..."
+              placeholder={t('layout.search')}
               className="bg-transparent border-none outline-none text-sm w-full placeholder:text-on-surface-variant/40 text-on-surface"
             />
           </div>
@@ -129,7 +123,7 @@ export function Layout() {
           <div className="flex items-center gap-3 ml-auto">
             {/* Role badge */}
             <span className="hidden md:inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-white/5 border border-white/8 text-on-surface-variant/70">
-              {roleLabels[session.role]}
+              {t(`layout.roles.${session.role}`)}
             </span>
 
             {/* Bell */}

@@ -3,6 +3,7 @@ import { Bell, Check, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationPanelProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface NotificationPanelProps {
 }
 
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
+  const { t } = useTranslation();
   const notifications = useStore((s) => s.notifications) || [];
   const markNotificationAsRead = useStore((s) => s.markNotificationAsRead);
   const clearNotifications = useStore((s) => s.clearNotifications);
@@ -39,7 +41,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
             <div className="flex items-center justify-between p-4 border-b border-outline-variant/30 bg-surface-variant/50">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" />
-                <h3 className="font-headline font-semibold text-on-surface">Notificações</h3>
+                <h3 className="font-headline font-semibold text-on-surface">{t('notifications.title')}</h3>
                 {unreadCount > 0 && (
                   <span className="bg-primary text-on-primary text-xs font-bold px-2 py-0.5 rounded-full">
                     {unreadCount}
@@ -51,7 +53,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                   <button
                     onClick={() => clearNotifications()}
                     className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-full transition-colors"
-                    title="Limpar todas"
+                    title={t('notifications.clearAll')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -71,9 +73,9 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                   <div className="w-16 h-16 bg-surface-variant rounded-full flex items-center justify-center mb-4">
                     <Bell className="w-8 h-8 text-on-surface-variant opacity-50" />
                   </div>
-                  <p className="text-on-surface font-medium">Nenhuma notificação</p>
+                  <p className="text-on-surface font-medium">{t('notifications.empty')}</p>
                   <p className="text-sm text-on-surface-variant mt-1">
-                    Você está em dia com todas as suas tarefas e atualizações.
+                    {t('notifications.emptySubtitle')}
                   </p>
                 </div>
               ) : (
@@ -113,7 +115,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                           <button
                             onClick={() => markNotificationAsRead(notification.id)}
                             className="opacity-0 group-hover:opacity-100 p-1.5 h-fit text-primary hover:bg-primary/10 rounded-full transition-all"
-                            title="Marcar como lida"
+                            title={t('notifications.markRead')}
                           >
                             <Check className="w-4 h-4" />
                           </button>

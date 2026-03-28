@@ -7,7 +7,7 @@ import { NewClientModal } from '../components/modals/NewClientModal';
 import { EditClientModal } from '../components/modals/EditClientModal';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { Client } from '../types';
+import { Client } from '../store';
 
 const container = {
   hidden: { opacity: 0 },
@@ -45,7 +45,7 @@ export function Clients() {
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors border border-surface-container-highest">
             <Filter className="w-4 h-4" />
-            <span className="text-sm font-medium">Filtrar</span>
+            <span className="text-sm font-medium">{t('clients.filter')}</span>
           </button>
           <button 
             onClick={() => setModalOpen(true)}
@@ -72,7 +72,7 @@ export function Clients() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
           <input 
             type="text" 
-            placeholder="Buscar clientes..." 
+            placeholder={t('clients.search')} 
             className="w-full bg-surface-container-low border border-surface-container-high rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-colors placeholder:text-on-surface-variant"
           />
         </div>
@@ -99,7 +99,7 @@ export function Clients() {
                   setEditingClient(client);
                 }}
                 className="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors"
-                title="Editar cliente"
+                title={t('clients.editTitle')}
               >
                 <Edit2 className="w-4 h-4" />
               </button>
@@ -120,11 +120,11 @@ export function Clients() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Contato</span>
+                <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">{t('clients.contactLabel')}</span>
                 <span className="font-semibold text-on-surface text-sm truncate">{client.contact}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Status</span>
+                <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">{t('clients.statusLabel')}</span>
                 <div className="flex items-center gap-1.5">
                   <div className={cn(
                     "w-2 h-2 rounded-full",

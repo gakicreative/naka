@@ -13,6 +13,43 @@ const resources = {
         projects: 'Projetos',
         settings: 'Configurações'
       },
+      common: {
+        save: 'Salvar',
+        cancel: 'Cancelar',
+        optional: 'Opcional.',
+        updated: 'Atualizado',
+        active_badge: 'Ativo',
+        currentMonth: 'Mês Atual',
+        viewAll: 'Ver todos',
+        saving: 'Salvando...',
+        status: {
+          late: 'Atrasado'
+        }
+      },
+      layout: {
+        logout: 'Trocar perfil',
+        search: 'Buscar clientes, tarefas...',
+        roles: {
+          admin: 'Admin',
+          socio: 'Sócio',
+          seeder: 'Funcionário',
+          cliente: 'Cliente'
+        }
+      },
+      login: {
+        inviteMessage: 'Você foi convidado para participar da equipe. Faça login para aceitar.',
+        subtitle: 'Faça login para acessar o sistema',
+        continueWithGoogle: 'Continuar com Google',
+        success: 'Login realizado com sucesso!',
+        error: 'Erro ao fazer login. Tente novamente.'
+      },
+      notifications: {
+        title: 'Notificações',
+        clearAll: 'Limpar todas',
+        markRead: 'Marcar como lida',
+        empty: 'Nenhuma notificação',
+        emptySubtitle: 'Você está em dia com todas as suas tarefas e atualizações.'
+      },
       settings: {
         title: 'Configurações',
         subtitle: 'Gerencie suas preferências e configurações da conta',
@@ -48,17 +85,25 @@ const resources = {
           english: 'Inglês',
           changed: 'Idioma alterado com sucesso!'
         },
+        team: {
+          newPartner: 'Novo Sócio',
+          newSeeder: 'Novo Funcionário',
+          invitesGenerated: 'Convites Gerados',
+          noInvites: 'Nenhum convite gerado ainda.',
+          used: 'Usado',
+          pending: 'Pendente'
+        },
+        danger: {
+          title: 'Zona de Perigo',
+          clearCache: 'Limpar Cache Local',
+          clearCacheDesc: 'Apaga os dados armazenados localmente no navegador. Isso não afeta seus dados na nuvem.'
+        },
+        labels: {
+          manage: 'Gerenciar',
+          noLabels: 'Nenhuma etiqueta criada ainda.',
+          createFirst: 'Criar primeira etiqueta'
+        },
         unavailable: 'Recurso indisponível no momento'
-      },
-      common: {
-        save: 'Salvar',
-        updated: 'Atualizado',
-        active_badge: 'Ativo',
-        currentMonth: 'Mês Atual',
-        viewAll: 'Ver todos',
-        status: {
-          late: 'Atrasado'
-        }
       },
       dashboard: {
         greeting: 'Olá, {{name}}',
@@ -87,11 +132,87 @@ const resources = {
         addFirst: 'Adicionar primeiro cliente',
         monthlyRetainer: 'Fee Mensal',
         openKanban: 'Abrir Kanban',
-        noClients: 'Nenhum cliente encontrado'
+        noClients: 'Nenhum cliente encontrado',
+        filter: 'Filtrar',
+        search: 'Buscar clientes...',
+        contactLabel: 'Contato',
+        statusLabel: 'Status',
+        editTitle: 'Editar cliente',
+        companyName: 'Nome da Empresa',
+        companyNamePlaceholder: 'Ex: Acme Corp',
+        website: 'Site da Empresa',
+        websitePlaceholder: 'https://empresa.com.br',
+        industry: 'Setor / Indústria',
+        industryPlaceholder: 'Ex: Tecnologia',
+        maxTasks: 'Máx. Tarefas Simultâneas',
+        contact: 'Contato Principal',
+        contactPlaceholder: 'Nome da pessoa',
+        email: 'Email',
+        emailPlaceholder: 'contato@empresa.com',
+        phone: 'Telefone',
+        phonePlaceholder: '(11) 99999-9999',
+        addClient: 'Adicionar Cliente',
+        editClient: 'Editar Cliente',
+        saveChanges: 'Salvar Alterações',
+        added: 'Cliente adicionado com sucesso!',
+        updated: 'Cliente atualizado com sucesso!',
+        logoUpdated: 'Logo atualizado com sucesso!',
+        errorUpdateLogo: 'Erro ao atualizar logo'
       },
       projects: {
         title: 'Projetos',
-        noProjects: 'Nenhum projeto encontrado'
+        new: 'Novo Projeto',
+        internalProject: 'Projeto Interno',
+        noProjects: 'Nenhum projeto encontrado',
+        nameLabel: 'Nome do Projeto',
+        namePlaceholder: 'Ex: Redesign do Site',
+        descriptionLabel: 'Descrição',
+        descriptionPlaceholder: 'Descreva o objetivo do projeto...',
+        initialStage: 'Fase Inicial',
+        dueDate: 'Prazo Estimado',
+        creating: 'Criando...',
+        create: 'Criar Projeto',
+        created: 'Projeto criado com sucesso!',
+        errorCreate: 'Erro ao criar projeto'
+      },
+      task: {
+        new: 'Nova Tarefa',
+        titleLabel: 'Título',
+        titlePlaceholder: 'Ex: Criar post para Instagram',
+        titleRequired: 'O título da tarefa é obrigatório',
+        descriptionLabel: 'Descrição',
+        descriptionPlaceholder: 'Detalhes da tarefa...',
+        clientLabel: 'Cliente',
+        selectClient: 'Selecione um cliente',
+        projectLabel: 'Projeto',
+        selectProject: 'Selecione um projeto',
+        priorityLabel: 'Prioridade',
+        create: 'Criar Tarefa',
+        created: 'Tarefa criada com sucesso!',
+        errorCreate: 'Erro ao criar tarefa'
+      },
+      labels: {
+        manageTitle: 'Gerenciar Etiquetas',
+        newPlaceholder: 'Nova etiqueta...',
+        created: 'Etiqueta criada com sucesso!',
+        errorCreate: 'Erro ao criar etiqueta',
+        deleted: 'Etiqueta excluída com sucesso!',
+        errorDelete: 'Erro ao excluir etiqueta',
+        noLabels: 'Nenhuma etiqueta criada'
+      },
+      tasks: {
+        title: 'Tarefas de Hoje',
+        subtitle: 'Veja o que está agendado para o dia',
+        todayCount: 'hoje',
+        urgentCount: 'urgentes',
+        viewKanban: 'Ver Kanban',
+        searchPlaceholder: 'Buscar cliente...',
+        noTasksToday: 'Nenhuma tarefa para hoje. Aproveite!',
+        tasksLabel: 'tarefa(s)'
+      },
+      kanban: {
+        activeTasks: 'tarefas ativas',
+        internalProject: 'Projeto Interno'
       },
       portal: {
         title: 'Portal do Cliente',
@@ -111,6 +232,43 @@ const resources = {
         finances: 'Finances',
         projects: 'Projects',
         settings: 'Settings'
+      },
+      common: {
+        save: 'Save',
+        cancel: 'Cancel',
+        optional: 'Optional.',
+        updated: 'Updated',
+        active_badge: 'Active',
+        currentMonth: 'Current Month',
+        viewAll: 'View all',
+        saving: 'Saving...',
+        status: {
+          late: 'Late'
+        }
+      },
+      layout: {
+        logout: 'Switch profile',
+        search: 'Search clients, tasks...',
+        roles: {
+          admin: 'Admin',
+          socio: 'Partner',
+          seeder: 'Employee',
+          cliente: 'Client'
+        }
+      },
+      login: {
+        inviteMessage: 'You have been invited to join the team. Sign in to accept.',
+        subtitle: 'Sign in to access the system',
+        continueWithGoogle: 'Continue with Google',
+        success: 'Login successful!',
+        error: 'Login error. Please try again.'
+      },
+      notifications: {
+        title: 'Notifications',
+        clearAll: 'Clear all',
+        markRead: 'Mark as read',
+        empty: 'No notifications',
+        emptySubtitle: 'You are up to date with all your tasks and updates.'
       },
       settings: {
         title: 'Settings',
@@ -147,17 +305,25 @@ const resources = {
           english: 'English',
           changed: 'Language changed successfully!'
         },
+        team: {
+          newPartner: 'New Partner',
+          newSeeder: 'New Employee',
+          invitesGenerated: 'Generated Invites',
+          noInvites: 'No invites generated yet.',
+          used: 'Used',
+          pending: 'Pending'
+        },
+        danger: {
+          title: 'Danger Zone',
+          clearCache: 'Clear Local Cache',
+          clearCacheDesc: 'Clears locally stored data in the browser. This does not affect your cloud data.'
+        },
+        labels: {
+          manage: 'Manage',
+          noLabels: 'No labels created yet.',
+          createFirst: 'Create first label'
+        },
         unavailable: 'Feature currently unavailable'
-      },
-      common: {
-        save: 'Save',
-        updated: 'Updated',
-        active_badge: 'Active',
-        currentMonth: 'Current Month',
-        viewAll: 'View all',
-        status: {
-          late: 'Late'
-        }
       },
       dashboard: {
         greeting: 'Hello, {{name}}',
@@ -186,11 +352,87 @@ const resources = {
         addFirst: 'Add first client',
         monthlyRetainer: 'Monthly Retainer',
         openKanban: 'Open Kanban',
-        noClients: 'No clients found'
+        noClients: 'No clients found',
+        filter: 'Filter',
+        search: 'Search clients...',
+        contactLabel: 'Contact',
+        statusLabel: 'Status',
+        editTitle: 'Edit client',
+        companyName: 'Company Name',
+        companyNamePlaceholder: 'E.g.: Acme Corp',
+        website: 'Company Website',
+        websitePlaceholder: 'https://company.com',
+        industry: 'Industry',
+        industryPlaceholder: 'E.g.: Technology',
+        maxTasks: 'Max Concurrent Tasks',
+        contact: 'Main Contact',
+        contactPlaceholder: 'Person name',
+        email: 'Email',
+        emailPlaceholder: 'contact@company.com',
+        phone: 'Phone',
+        phonePlaceholder: '(11) 99999-9999',
+        addClient: 'Add Client',
+        editClient: 'Edit Client',
+        saveChanges: 'Save Changes',
+        added: 'Client added successfully!',
+        updated: 'Client updated successfully!',
+        logoUpdated: 'Logo updated successfully!',
+        errorUpdateLogo: 'Error updating logo'
       },
       projects: {
         title: 'Projects',
-        noProjects: 'No projects found'
+        new: 'New Project',
+        internalProject: 'Internal Project',
+        noProjects: 'No projects found',
+        nameLabel: 'Project Name',
+        namePlaceholder: 'E.g.: Website Redesign',
+        descriptionLabel: 'Description',
+        descriptionPlaceholder: 'Describe the project objective...',
+        initialStage: 'Initial Stage',
+        dueDate: 'Estimated Due Date',
+        creating: 'Creating...',
+        create: 'Create Project',
+        created: 'Project created successfully!',
+        errorCreate: 'Error creating project'
+      },
+      task: {
+        new: 'New Task',
+        titleLabel: 'Title',
+        titlePlaceholder: 'E.g.: Create Instagram post',
+        titleRequired: 'Task title is required',
+        descriptionLabel: 'Description',
+        descriptionPlaceholder: 'Task details...',
+        clientLabel: 'Client',
+        selectClient: 'Select a client',
+        projectLabel: 'Project',
+        selectProject: 'Select a project',
+        priorityLabel: 'Priority',
+        create: 'Create Task',
+        created: 'Task created successfully!',
+        errorCreate: 'Error creating task'
+      },
+      labels: {
+        manageTitle: 'Manage Labels',
+        newPlaceholder: 'New label...',
+        created: 'Label created successfully!',
+        errorCreate: 'Error creating label',
+        deleted: 'Label deleted successfully!',
+        errorDelete: 'Error deleting label',
+        noLabels: 'No labels created'
+      },
+      tasks: {
+        title: "Today's Tasks",
+        subtitle: 'See what is scheduled for today',
+        todayCount: 'today',
+        urgentCount: 'urgent',
+        viewKanban: 'View Kanban',
+        searchPlaceholder: 'Search client...',
+        noTasksToday: 'No tasks for today. Enjoy!',
+        tasksLabel: 'task(s)'
+      },
+      kanban: {
+        activeTasks: 'active tasks',
+        internalProject: 'Internal Project'
       },
       portal: {
         title: 'Client Portal',

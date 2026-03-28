@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { useStore } from '../../store';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ManageLabelsModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ManageLabelsModalProps {
 }
 
 export function ManageLabelsModal({ isOpen, onClose }: ManageLabelsModalProps) {
+  const { t } = useTranslation();
   const labels = useStore((s) => s.labels);
   const addLabel = useStore((s) => s.addLabel);
   const deleteLabel = useStore((s) => s.deleteLabel);
@@ -28,20 +30,20 @@ export function ManageLabelsModal({ isOpen, onClose }: ManageLabelsModalProps) {
         iconName: 'solar:tag-linear'
       });
       setNewLabelName('');
-      toast.success('Etiqueta criada com sucesso!');
+      toast.success(t('labels.created'));
     } catch (error) {
       console.error('Erro ao criar etiqueta:', error);
-      toast.error('Erro ao criar etiqueta');
+      toast.error(t('labels.errorCreate'));
     }
   };
 
   const handleDeleteLabel = async (id: string) => {
     try {
       await deleteLabel(id);
-      toast.success('Etiqueta excluída com sucesso!');
+      toast.success(t('labels.deleted'));
     } catch (error) {
       console.error('Erro ao excluir etiqueta:', error);
-      toast.error('Erro ao excluir etiqueta');
+      toast.error(t('labels.errorDelete'));
     }
   };
 
@@ -49,7 +51,7 @@ export function ManageLabelsModal({ isOpen, onClose }: ManageLabelsModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-surface w-full max-w-md rounded-3xl shadow-xl overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-outline-variant/30">
-          <h2 className="text-xl font-headline font-semibold text-on-surface">Gerenciar Etiquetas</h2>
+          <h2 className="text-xl font-headline font-semibold text-on-surface">{t('labels.manageTitle')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-surface-variant rounded-full transition-colors">
             <X className="w-5 h-5 text-on-surface-variant" />
           </button>
@@ -67,7 +69,7 @@ export function ManageLabelsModal({ isOpen, onClose }: ManageLabelsModalProps) {
               type="text"
               value={newLabelName}
               onChange={(e) => setNewLabelName(e.target.value)}
-              placeholder="Nova etiqueta..."
+              placeholder={t('labels.newPlaceholder')}
               className="flex-1 px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface"
             />
             <button
@@ -81,7 +83,7 @@ export function ManageLabelsModal({ isOpen, onClose }: ManageLabelsModalProps) {
 
           <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {labels.length === 0 ? (
-              <p className="text-center text-on-surface-variant text-sm py-4">Nenhuma etiqueta criada</p>
+              <p className="text-center text-on-surface-variant text-sm py-4">{t('labels.noLabels')}</p>
             ) : (
               labels.map((label) => (
                 <div key={label.id} className="flex items-center justify-between p-3 bg-surface-variant rounded-xl">

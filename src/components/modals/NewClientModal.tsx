@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Modal } from '../Modal';
 import { useStore } from '../../store';
 import { toast } from 'sonner';
 import { extractBrandFromUrl } from '../../lib/utils';
 import { BrandSuggestionModal } from './BrandSuggestionModal';
+import { useTranslation } from 'react-i18next';
 
 interface NewClientModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface NewClientModalProps {
 }
 
 export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
+  const { t } = useTranslation();
   const addClient = useStore((state) => state.addClient);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -32,7 +34,7 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
 
   const handleWebsiteBlur = async () => {
     if (!formData.website || formData.logo) return;
-    
+
     setIsExtracting(true);
     try {
       const brandData = await extractBrandFromUrl(formData.website);
@@ -63,12 +65,12 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
     try {
       addClient({
         ...formData,
-        logo: formData.name.charAt(0).toUpperCase() || 'C',
+        logo: formData.logo || formData.name.charAt(0).toUpperCase() || 'C',
         createdAt: new Date().toISOString(),
       });
       onClose();
       setFormData({ name: '', industry: '', status: 'Ativo', logo: '', contact: '', email: '', phone: '', website: '', maxActiveTasks: 2 });
-      toast.success('Cliente adicionado com sucesso!');
+      toast.success(t('clients.added'));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,28 +78,27 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Novo Cliente">
+      <Modal isOpen={isOpen} onClose={onClose} title={t('clients.new')}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Nome da Empresa</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.companyName')}</label>
             <input
               required
               type="text"
               className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-              placeholder="Ex: Acme Corp"
+              placeholder={t('clients.companyNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
 
-          {/* Website */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Site da Empresa</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.website')}</label>
             <div className="flex gap-2 relative">
               <input
                 type="url"
                 className="flex-1 bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface pr-10"
-                placeholder="https://empresa.com.br"
+                placeholder={t('clients.websitePlaceholder')}
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 onBlur={handleWebsiteBlur}
@@ -108,29 +109,29 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
                 </div>
               )}
             </div>
-            <p className="text-xs text-on-surface-variant">Opcional.</p>
+            <p className="text-xs text-on-surface-variant">{t('common.optional')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Setor / Indústria</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.industry')}</label>
               <input
                 required
                 type="text"
                 className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-                placeholder="Ex: Tecnologia"
+                placeholder={t('clients.industryPlaceholder')}
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Máx. Tarefas Simultâneas</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.maxTasks')}</label>
               <input
                 required
                 type="number"
                 min="1"
                 className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-                placeholder="Ex: 2"
+                placeholder="2"
                 value={formData.maxActiveTasks}
                 onChange={(e) => setFormData({ ...formData, maxActiveTasks: parseInt(e.target.value) || 2 })}
               />
@@ -138,12 +139,12 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-on-surface-variant">Contato Principal</label>
+            <label className="text-sm font-medium text-on-surface-variant">{t('clients.contact')}</label>
             <input
               required
               type="text"
               className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-              placeholder="Nome da pessoa"
+              placeholder={t('clients.contactPlaceholder')}
               value={formData.contact}
               onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
             />
@@ -151,23 +152,23 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Email</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.email')}</label>
               <input
                 required
                 type="email"
                 className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-                placeholder="contato@empresa.com"
+                placeholder={t('clients.emailPlaceholder')}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">Telefone</label>
+              <label className="text-sm font-medium text-on-surface-variant">{t('clients.phone')}</label>
               <input
                 required
                 type="tel"
                 className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-                placeholder="(11) 99999-9999"
+                placeholder={t('clients.phonePlaceholder')}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
@@ -180,14 +181,14 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container-high transition-colors"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="px-6 py-2 rounded-xl text-sm font-medium bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50"
             >
-              Adicionar Cliente
+              {t('clients.addClient')}
             </button>
           </div>
         </form>

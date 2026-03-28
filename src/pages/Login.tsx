@@ -36,10 +36,10 @@ export function Login() {
     try {
       await signInWithPopup(auth, googleProvider);
       // The onAuthStateChanged listener in AppProvider will handle the session update
-      toast.success('Login realizado com sucesso!');
+      toast.success(t('login.success'));
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Erro ao fazer login. Tente novamente.');
+      toast.error(t('login.error'));
     }
   };
 
@@ -56,8 +56,8 @@ export function Login() {
           </h1>
           <p className="text-on-surface-variant text-sm">
             {new URLSearchParams(window.location.search).get('invite') 
-              ? 'Você foi convidado para participar da equipe. Faça login para aceitar.'
-              : 'Faça login para acessar o sistema'}
+              ? t('login.inviteMessage')
+              : t('login.subtitle')}
           </p>
         </div>
 
@@ -85,7 +85,7 @@ export function Login() {
               />
               <path d="M1 1h22v22H1z" fill="none" />
             </svg>
-            Continuar com Google
+            {t('login.continueWithGoogle')}
           </button>
         </div>
       </div>
