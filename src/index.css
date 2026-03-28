@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Primary */
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
+  /* Secondary */
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+
+  /* Tertiary */
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+
+  /* Error */
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  /* Background */
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
+  /* Container layers */
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low:    var(--surface-container-low);
+  --color-surface-container:        var(--surface-container);
+  --color-surface-container-high:   var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+:root {
+  /* Light mode variables */
+  --primary: #4b5563;
+  --on-primary: #ffffff;
+  --primary-container: #e5e7eb;
+  --on-primary-container: #1f2937;
+
+  --secondary: #6b7280;
+  --on-secondary: #ffffff;
+  --secondary-container: #f3f4f6;
+  --on-secondary-container: #111827;
+
+  --tertiary: #9ca3af;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #f9fafb;
+  --on-tertiary-container: #374151;
+
+  --error: #ef4444;
+  --on-error: #ffffff;
+  --error-container: #fee2e2;
+  --on-error-container: #991b1b;
+
+  --background: #f9fafb;
+  --on-background: #111827;
+  --surface: #ffffff;
+  --on-surface: #111827;
+  --surface-variant: #f3f4f6;
+  --on-surface-variant: #4b5563;
+  --outline: #d1d5db;
+  --outline-variant: #e5e7eb;
+
+  --surface-container-lowest: #ffffff;
+  --surface-container-low:    #f9fafb;
+  --surface-container:        #f3f4f6;
+  --surface-container-high:   #e5e7eb;
+  --surface-container-highest: #d1d5db;
+  
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --glass-hover-border: rgba(0, 0, 0, 0.16);
+  --glass-sidebar: rgba(250, 250, 250, 0.95);
+  --glass-header: rgba(250, 250, 250, 0.92);
+  
+  --nav-active-bg: rgba(0, 0, 0, 0.05);
+  --nav-active-border: rgba(0, 0, 0, 0.1);
+  --nav-active-text: #111827;
+  --nav-active-indicator: #4b5563;
+  
+  --nav-inactive-text: #6b7280;
+  --nav-inactive-hover-bg: rgba(0, 0, 0, 0.03);
+  --nav-inactive-hover-text: #374151;
+}
+
+.dark {
+  /* Dark mode variables (original) */
+  --primary: #9ca3af;
+  --on-primary: #000000;
+  --primary-container: #1f1f1f;
+  --on-primary-container: #d1d5db;
+
+  --secondary: #d1d5db;
+  --on-secondary: #0a0a0a;
+  --secondary-container: #1a1a1a;
+  --on-secondary-container: #e5e7eb;
+
+  --tertiary: #6b7280;
+  --on-tertiary: #f9fafb;
+  --tertiary-container: #171717;
+  --on-tertiary-container: #9ca3af;
+
+  --error: #f87171;
+  --on-error: #1a0000;
+  --error-container: #450a0a;
+  --on-error-container: #fca5a5;
+
+  --background: #0d0d0d;
+  --on-background: #ffffff;
+  --surface: #0d0d0d;
+  --on-surface: #ffffff;
+  --surface-variant: #1a1a1a;
+  --on-surface-variant: #9ca3af;
+  --outline: #374151;
+  --outline-variant: #1f2937;
+
+  --surface-container-lowest: #080808;
+  --surface-container-low:    #111111;
+  --surface-container:        #171717;
+  --surface-container-high:   #1f1f1f;
+  --surface-container-highest: #262626;
+  
+  --glass-bg: rgba(17, 17, 17, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-hover-border: rgba(255, 255, 255, 0.16);
+  --glass-sidebar: rgba(10, 10, 10, 0.95);
+  --glass-header: rgba(10, 10, 10, 0.92);
+  
+  --nav-active-bg: rgba(255, 255, 255, 0.08);
+  --nav-active-border: rgba(255, 255, 255, 0.13);
+  --nav-active-text: #ffffff;
+  --nav-active-indicator: #d1d5db;
+  
+  --nav-inactive-text: #6b7280;
+  --nav-inactive-hover-bg: rgba(255, 255, 255, 0.04);
+  --nav-inactive-hover-text: #d1d5db;
+}
+
+body {
+  @apply text-on-surface font-body antialiased;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* ── Glassmorphism ──────────────────────────── */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .glass-card:hover {
+    border-color: var(--glass-hover-border);
+    box-shadow: 0 0 0 1px var(--glass-border), 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-sidebar {
+    background: var(--glass-sidebar);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid var(--glass-border);
+  }
+
+  .glass-header {
+    background: var(--glass-header) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+  }
+
+  /* Nav ativo */
+  .nav-active {
+    background: var(--nav-active-bg);
+    border: 1px solid var(--nav-active-border);
+    color: var(--nav-active-text) !important;
+    position: relative;
+    overflow: visible;
+  }
+  .nav-active::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    background: var(--nav-active-indicator);
+    border-radius: 2px 0 0 2px;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-inactive {
+    color: var(--nav-inactive-text);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-inactive:hover {
+    background: var(--nav-inactive-hover-bg);
+    color: var(--nav-inactive-hover-text);
+  }
+}
