@@ -38,7 +38,7 @@ export function Projects() {
           className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
         >
           <Plus className="w-5 h-5" />
-          Novo Projeto
+          {t('projects.new')}
         </button>
       </div>
 
@@ -67,7 +67,7 @@ export function Projects() {
             
             <div>
               <h3 className="font-headline font-semibold text-on-surface text-lg">{project.name}</h3>
-              <p className="text-sm text-on-surface-variant mt-1">Projeto Interno</p>
+              <p className="text-sm text-on-surface-variant mt-1">{t('projects.internalProject')}</p>
             </div>
             
             <div className="mt-auto pt-4 flex items-center justify-between">
