@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useStore, Client, Project, Task, Transaction, BrandHub, Pin, TaskLabel, Notification } from '../store';
+import { useStore } from '../store';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
@@ -140,63 +140,63 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Listen to clients
     unsubscribes.push(
       onSnapshot(collection(db, 'clients'), (snapshot) => {
-        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching clients:", err))
     );
 
     // Listen to projects
     unsubscribes.push(
       onSnapshot(collection(db, 'projects'), (snapshot) => {
-        setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
+        setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching projects:", err))
     );
 
     // Listen to tasks
     unsubscribes.push(
       onSnapshot(collection(db, 'tasks'), (snapshot) => {
-        setTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task)));
+        setTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching tasks:", err))
     );
 
     // Listen to transactions
     unsubscribes.push(
       onSnapshot(collection(db, 'transactions'), (snapshot) => {
-        setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)));
+        setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching transactions:", err))
     );
 
     // Listen to brandhubs
     unsubscribes.push(
       onSnapshot(collection(db, 'brandhubs'), (snapshot) => {
-        setBrandHubs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BrandHub)));
+        setBrandHubs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching brandhubs:", err))
     );
 
     // Listen to pins
     unsubscribes.push(
       onSnapshot(collection(db, 'pins'), (snapshot) => {
-        setPins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Pin)));
+        setPins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching pins:", err))
     );
 
     // Listen to labels
     unsubscribes.push(
       onSnapshot(collection(db, 'labels'), (snapshot) => {
-        setLabels(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaskLabel)));
+        setLabels(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching labels:", err))
     );
 
     // Listen to notifications
     unsubscribes.push(
       onSnapshot(collection(db, 'notifications'), (snapshot) => {
-        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
+        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (err) => console.error("Error fetching notifications:", err))
     );
 
     return () => {
       unsubscribes.forEach(unsub => unsub());
     };
-  }, [isAuthReady, auth.currentUser?.uid]);
+  }, [isAuthReady, auth.currentUser]);
 
   const userInitial = userName.charAt(0).toUpperCase();
 

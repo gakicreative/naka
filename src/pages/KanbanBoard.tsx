@@ -7,7 +7,6 @@ import { useStore } from '../store';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { NewTaskModal } from '../components/modals/NewTaskModal';
-import { useTranslation } from 'react-i18next';
 
 const MOCK_USER = { uid: 'local-user', displayName: 'Yuri', photoURL: null };
 
@@ -1073,7 +1072,6 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
 }
 
 export function KanbanBoard() {
-  const { t } = useTranslation();
   const { projectId, clientId } = useParams();
   const [activeTab, setActiveTab] = useState('criacao-conteudo');
   const [activeFilter, setActiveFilter] = useState('Todas');
@@ -1271,7 +1269,7 @@ export function KanbanBoard() {
                 {boardTitle}
               </h1>
               <p className="text-[#8d909a] text-xs mt-1">
-                {(Object.values(columns) as ColumnData[]).reduce((acc, col) => acc + col.tasks.length, 0)} {t('kanban.activeTasks')}
+                {(Object.values(columns) as ColumnData[]).reduce((acc, col) => acc + col.tasks.length, 0)} tarefas ativas
                 {currentProject ? ` • ${currentProject.stage}` : currentClient ? ` • ${currentClient.industry}` : ''}
               </p>
             </div>

@@ -218,8 +218,7 @@ export function Dashboard() {
             </div>
             <div className="space-y-3">
               {pendingInvoices.slice(0, 4).map((invoice) => {
-                const checkDate = (invoice as any).dueDate || invoice.date;
-                const isLate = new Date(checkDate) < new Date() && new Date(checkDate).toDateString() !== new Date().toDateString();
+                const isLate = new Date(invoice.date) < new Date() && new Date(invoice.date).toDateString() !== new Date().toDateString();
                 const d = new Date(invoice.date);
                 const adjustedDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
                 const dateStr = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(adjustedDate);

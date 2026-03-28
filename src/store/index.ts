@@ -253,15 +253,16 @@ export const useStore = create<AppState>()(
       },
       deleteLabel: async (id) => {
         await deleteDoc(doc(db, 'labels', id));
-        // Also remove label from tasks — ideally a cloud function should handle this
+        // Also remove label from tasks locally for immediate UI update, 
+        // though ideally a cloud function should handle this
         const tasks = get().tasks;
-        await Promise.all(
-          tasks
-            .filter(t => t.tags?.includes(id))
-            .map(t => updateDoc(doc(db, 'tasks', t.id), {
-              tags: t.tags!.filter(tag => tag !== id)
-            }))
-        );
+        tasks.forEach(async (t) => {
+          if (t.tags?.includes(id)) {
+            await updateDoc(doc(db, 'tasks', t.id), {
+              tags: t.tags.filter((tag) => tag !== id)
+            });
+          }
+        });
       },
       setLabels: (labels) => set({ labels }),
 
