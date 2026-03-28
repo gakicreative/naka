@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../Modal';
 import { useStore } from '../../store';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface RequestTaskModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface RequestTaskModalProps {
 }
 
 export function RequestTaskModal({ isOpen, onClose, clientId }: RequestTaskModalProps) {
+  const { t } = useTranslation();
   const addTask = useStore((state) => state.addTask);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,32 +36,32 @@ export function RequestTaskModal({ isOpen, onClose, clientId }: RequestTaskModal
       });
       onClose();
       setFormData({ title: '', description: '' });
-      toast.success('Solicitação enviada com sucesso!');
+      toast.success(t('requestTask.success'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nova Solicitação de Tarefa">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('requestTask.title')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-on-surface-variant">O que você precisa?</label>
+          <label className="text-sm font-medium text-on-surface-variant">{t('requestTask.whatLabel')}</label>
           <input
             required
             type="text"
             className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
-            placeholder="Ex: Criar banner para o Instagram"
+            placeholder={t('requestTask.whatPlaceholder')}
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-on-surface-variant">Detalhes (Opcional)</label>
+          <label className="text-sm font-medium text-on-surface-variant">{t('requestTask.detailsLabel')}</label>
           <textarea
             className="w-full bg-surface-container border border-surface-container-high rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 text-on-surface resize-none h-24"
-            placeholder="Descreva os detalhes, referências ou informações importantes..."
+            placeholder={t('requestTask.detailsPlaceholder')}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
@@ -71,14 +73,14 @@ export function RequestTaskModal({ isOpen, onClose, clientId }: RequestTaskModal
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
             className="px-6 py-2 rounded-xl text-sm font-medium bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50"
           >
-            Enviar Solicitação
+            {t('requestTask.submit')}
           </button>
         </div>
       </form>

@@ -40,7 +40,7 @@ export function Settings() {
     { id: 'security',      icon: Key,     label: t('settings.tabs.security') },
     { id: 'notifications', icon: Bell,    label: t('settings.tabs.notifications') },
     { id: 'localization',  icon: Globe,   label: t('settings.tabs.localization') },
-    { id: 'labels',        icon: Tag,     label: 'Etiquetas' },
+    { id: 'labels',        icon: Tag,     label: t('settings.tabs.labels') },
   ];
 
   const visibleTabs = tabs.filter(tab => !tab.adminOnly || session?.role === 'admin');
@@ -148,7 +148,7 @@ export function Settings() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="font-headline font-semibold text-xl">Equipe e Convites</h2>
+                  <h2 className="font-headline font-semibold text-xl">{t('settings.tabs.team')}</h2>
                   <p className="text-sm text-on-surface-variant mt-1">
                     Gere convites para adicionar sócios ou seeders à plataforma.
                   </p>
@@ -160,7 +160,7 @@ export function Settings() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     <Plus className="w-4 h-4" />
-                    Novo Sócio
+                    {t('settings.team.newPartner')}
                   </button>
                   <button
                     onClick={() => handleGenerateInvite('seeder')}
@@ -168,16 +168,16 @@ export function Settings() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container-highest hover:bg-surface-variant text-on-surface text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     <Plus className="w-4 h-4" />
-                    Novo Seeder
+                    {t('settings.team.newSeeder')}
                   </button>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-medium text-on-surface">Convites Gerados</h3>
+                <h3 className="font-medium text-on-surface">{t('settings.team.invitesGenerated')}</h3>
                 {invites.length === 0 ? (
                   <div className="py-8 text-center text-on-surface-variant border border-dashed border-surface-container-high rounded-2xl">
-                    <p className="text-sm">Nenhum convite gerado ainda.</p>
+                    <p className="text-sm">{t('settings.team.noInvites')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -202,12 +202,12 @@ export function Settings() {
                         <div className="flex items-center gap-3">
                           {invite.used ? (
                             <span className="text-xs font-medium text-red-500 bg-red-500/10 px-2 py-1 rounded-lg">
-                              Usado
+                              {t('settings.team.used')}
                             </span>
                           ) : (
                             <>
                               <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                                Pendente
+                                {t('settings.team.pending')}
                               </span>
                               <button
                                 onClick={() => copyInviteLink(invite.id)}
@@ -421,19 +421,19 @@ export function Settings() {
               
               <div className="space-y-6">
                 <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5">
-                  <h3 className="text-lg font-medium text-red-500 mb-2">Zona de Perigo</h3>
+                  <h3 className="text-lg font-medium text-red-500 mb-2">{t('settings.danger.title')}</h3>
                   <p className="text-sm text-on-surface-variant mb-4">
-                    Limpar o cache local apagará suas preferências de idioma e estado de notificações lidas. Os dados do aplicativo (clientes, projetos) agora estão salvos com segurança na nuvem.
+                    {t('settings.danger.clearCacheDesc')}
                   </p>
                   <button
                     onClick={() => {
                       localStorage.removeItem('nakaos-store');
-                      toast.success('Cache local apagado com sucesso! Recarregando...');
+                      toast.success(t('settings.danger.clearCacheSuccess'));
                       setTimeout(() => window.location.reload(), 1500);
                     }}
                     className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
                   >
-                    Limpar Cache Local
+                    {t('settings.danger.clearCache')}
                   </button>
                 </div>
               </div>
@@ -451,7 +451,7 @@ export function Settings() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="font-headline font-semibold text-xl">Etiquetas</h2>
+                  <h2 className="font-headline font-semibold text-xl">{t('settings.tabs.labels')}</h2>
                   <p className="text-sm text-on-surface-variant mt-1">
                     Crie etiquetas personalizadas para classificar as tarefas do Kanban.
                   </p>
@@ -461,7 +461,7 @@ export function Settings() {
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/8 hover:bg-white/12 border border-white/10 text-sm font-medium text-on-surface transition-colors"
                 >
                   <Tag className="w-4 h-4" />
-                  Gerenciar
+                  {t('settings.labels.manage')}
                 </button>
               </div>
 
@@ -474,12 +474,12 @@ export function Settings() {
               ) : (
                 <div className="py-12 text-center text-on-surface-variant">
                   <Tag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">Nenhuma etiqueta criada ainda.</p>
+                  <p className="text-sm">{t('settings.labels.noLabels')}</p>
                   <button
                     onClick={() => setLabelsModalOpen(true)}
                     className="mt-3 px-4 py-2 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium text-on-surface transition-colors"
                   >
-                    Criar primeira etiqueta
+                    {t('settings.labels.createFirst')}
                   </button>
                 </div>
               )}

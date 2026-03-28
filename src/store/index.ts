@@ -256,13 +256,13 @@ export const useStore = create<AppState>()(
         // Also remove label from tasks locally for immediate UI update, 
         // though ideally a cloud function should handle this
         const tasks = get().tasks;
-        tasks.forEach(async (t) => {
-          if (t.tags?.includes(id)) {
-            await updateDoc(doc(db, 'tasks', t.id), {
-              tags: t.tags.filter((tag) => tag !== id)
-            });
-          }
-        });
+        await Promise.all(
+          tasks
+            .filter(t => t.tags?.includes(id))
+            .map(t => updateDoc(doc(db, 'tasks', t.id), {
+              tags: t.tags!.filter((tag) => tag !== id)
+            }))
+        );
       },
       setLabels: (labels) => set({ labels }),
 

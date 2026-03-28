@@ -96,7 +96,8 @@ const resources = {
         danger: {
           title: 'Zona de Perigo',
           clearCache: 'Limpar Cache Local',
-          clearCacheDesc: 'Apaga os dados armazenados localmente no navegador. Isso não afeta seus dados na nuvem.'
+          clearCacheDesc: 'Apaga os dados armazenados localmente no navegador. Isso não afeta seus dados na nuvem.',
+          clearCacheSuccess: 'Cache local apagado com sucesso! Recarregando...'
         },
         labels: {
           manage: 'Gerenciar',
@@ -219,6 +220,21 @@ const resources = {
         myBrand: 'Minha Marca',
         deliverables: 'Entregáveis',
         noBrandHub: 'Nenhum Brand Hub configurado'
+      },
+      requestTask: {
+        title: 'Nova Solicitação de Tarefa',
+        whatLabel: 'O que você precisa?',
+        whatPlaceholder: 'Ex: Criar banner para o Instagram',
+        detailsLabel: 'Detalhes (Opcional)',
+        detailsPlaceholder: 'Descreva os detalhes, referências ou informações importantes...',
+        submit: 'Enviar Solicitação',
+        success: 'Solicitação enviada com sucesso!'
+      },
+      brandSuggestion: {
+        title: 'Marca Encontrada',
+        description: 'Encontramos a identidade visual de <strong>{{name}}</strong>. Deseja aplicar?',
+        ignore: 'Ignorar',
+        apply: 'Aplicar'
       }
     }
   },
@@ -316,7 +332,8 @@ const resources = {
         danger: {
           title: 'Danger Zone',
           clearCache: 'Clear Local Cache',
-          clearCacheDesc: 'Clears locally stored data in the browser. This does not affect your cloud data.'
+          clearCacheDesc: 'Clears locally stored data in the browser. This does not affect your cloud data.',
+          clearCacheSuccess: 'Local cache cleared successfully! Reloading...'
         },
         labels: {
           manage: 'Manage',
@@ -439,6 +456,21 @@ const resources = {
         myBrand: 'My Brand',
         deliverables: 'Deliverables',
         noBrandHub: 'No Brand Hub configured'
+      },
+      requestTask: {
+        title: 'New Task Request',
+        whatLabel: 'What do you need?',
+        whatPlaceholder: 'E.g.: Create an Instagram banner',
+        detailsLabel: 'Details (Optional)',
+        detailsPlaceholder: 'Describe details, references, or important information...',
+        submit: 'Submit Request',
+        success: 'Request submitted successfully!'
+      },
+      brandSuggestion: {
+        title: 'Brand Found',
+        description: 'We found the visual identity of <strong>{{name}}</strong>. Would you like to apply it?',
+        ignore: 'Ignore',
+        apply: 'Apply'
       }
     }
   }

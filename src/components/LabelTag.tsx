@@ -3,7 +3,6 @@ import { Icon } from '@iconify/react';
 import type { TaskLabel } from '../store';
 
 interface LabelTagProps {
-  key?: string | number;
   label: TaskLabel;
   size?: 'sm' | 'md';
   onRemove?: () => void;
