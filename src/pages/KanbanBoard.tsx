@@ -99,6 +99,7 @@ const columnDefs = {
 };
 
 function VisualFeedbackModal({ taskId, imageUrl, onClose }: { taskId: string; imageUrl: string; onClose: () => void }) {
+  const { t } = useTranslation();
   const storePins = useStore((s) => s.pins);
   const addPin    = useStore((s) => s.addPin);
   const updatePin = useStore((s) => s.updatePin);
@@ -144,7 +145,7 @@ function VisualFeedbackModal({ taskId, imageUrl, onClose }: { taskId: string; im
   };
 
   const deletePin = (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este comentário?')) return;
+    if (!window.confirm(t('kanban.confirmDeleteComment'))) return;
     deletePinFromStore(id);
     if (activePinId === id) setActivePinId(null);
   };
@@ -345,7 +346,7 @@ function VisualFeedbackModal({ taskId, imageUrl, onClose }: { taskId: string; im
 
             {pins.length === 0 && !draftPin && (
               <div className="text-center py-10 text-[#8d909a] text-sm">
-                Nenhum comentário ainda. Clique na imagem para adicionar.
+                {t('kanban.noComments')}
               </div>
             )}
           </div>
@@ -406,6 +407,7 @@ function TaskCard({
   onDrop?: (e: React.DragEvent) => void;
   isDragOver?: boolean;
 }) {
+  const { t } = useTranslation();
   const { deleteTask, updateTask } = useStore();
   const config = priorityConfig[task.priority] || priorityConfig['Média'];
   const Icon = config.icon;
@@ -414,10 +416,10 @@ function TaskCard({
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!window.confirm('Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.')) return;
+    if (!window.confirm(t('kanban.confirmDeleteTask'))) return;
     setIsDeleting(true);
     deleteTask(task.id);
-    toast.success('Tarefa excluída com sucesso.');
+    toast.success(t('kanban.taskDeleted'));
   };
 
   return (
@@ -454,7 +456,7 @@ function TaskCard({
               onComplete?.();
             }}
             className="p-1.5 text-[#8d909a] hover:text-[#81c784] hover:bg-[#81c784]/10 rounded-md transition-colors"
-            title="Concluir Tarefa"
+            title={t('kanban.completeTask')}
           >
             <CheckCircle2 className="w-4 h-4" />
           </button>
@@ -462,7 +464,7 @@ function TaskCard({
             onClick={handleDelete}
             disabled={isDeleting}
             className="p-1.5 text-[#8d909a] hover:text-[#ffb4ab] hover:bg-[#ffb4ab]/10 rounded-md transition-colors"
-            title="Excluir Tarefa"
+            title={t('kanban.deleteTask')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -471,10 +473,10 @@ function TaskCard({
               e.preventDefault();
               e.stopPropagation();
               updateTask(task.id, { status: 'archived' });
-              toast.success('Tarefa arquivada com sucesso!');
+              toast.success(t('kanban.taskArchived'));
             }}
             className="p-1.5 text-[#8d909a] hover:text-[#b7c4ff] hover:bg-[#b7c4ff]/10 rounded-md transition-colors"
-            title="Arquivar Tarefa"
+            title={t('kanban.archiveTask')}
           >
             <Archive className="w-4 h-4" />
           </button>
@@ -596,6 +598,7 @@ const SEED_MESSAGES: Record<string, ChatMessage[]> = {
 };
 
 function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { task: Task; onClose: () => void; onOpenFeedback: (url: string) => void; focusChat?: boolean; projectId?: string }) {
+  const { t } = useTranslation();
   const { updateTask, projects, updateProject } = useStore();
   const storeLabels = useStore((s) => s.labels);
   const project = projects.find(p => p.id === (task.projectId || projectId));
@@ -642,7 +645,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
 
   const handleCompleteTask = () => {
     updateTask(task.id, { status: 'archived', completedAt: new Date().toISOString() });
-    toast.success('Tarefa concluída! Movida para arquivados.');
+    toast.success(t('kanban.taskCompleted'));
     onClose();
   };
 
@@ -664,12 +667,12 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Apenas imagens são permitidas.');
+      toast.error(t('kanban.onlyImages'));
       if (e.target) e.target.value = '';
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('Imagem muito grande. Máximo: 10 MB.');
+      toast.error(t('kanban.imageTooLarge'));
       if (e.target) e.target.value = '';
       return;
     }
@@ -686,9 +689,9 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
         image: imageUrl,
       };
       setMessages((prev) => [...prev, newMsg]);
-      toast.success('Imagem enviada!');
+      toast.success(t('kanban.imageUploaded'));
     } catch {
-      toast.error('Erro ao processar a imagem. Tente novamente.');
+      toast.error(t('kanban.imageError'));
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
@@ -706,7 +709,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
   };
 
   const deleteComment = (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este comentário?')) return;
+    if (!window.confirm(t('kanban.confirmDeleteComment'))) return;
     setMessages((prev) => prev.filter((m) => m.id !== id));
   };
 
@@ -750,7 +753,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
                 onBlur={(e) => {
                   if (e.target.value.trim() !== task.title) {
                     updateTask(task.id, { title: e.target.value.trim() });
-                    toast.success('Título atualizado');
+                    toast.success(t('kanban.titleUpdated'));
                   }
                 }}
                 className="w-full bg-transparent text-2xl font-headline font-bold text-[#e5e2e1] focus:outline-none focus:border-b border-[#b7c4ff]/50 pb-1"
@@ -780,7 +783,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
               <textarea 
                 className="w-full h-32 bg-[#131313] border border-[#2a2a2a] rounded-xl p-4 text-sm text-[#8d909a] focus:outline-none focus:border-[#b7c4ff]/50 resize-none"
                 placeholder="Adicione uma descrição mais detalhada..."
-                defaultValue="Detalhes da tarefa..."
+                defaultValue={t('kanban.taskDetailsPlaceholder')}
               />
             </CollapsibleSection>
 
@@ -944,7 +947,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
         <div className="w-full md:w-2/5 h-full flex flex-col bg-[#131313]">
           <div className="p-5 border-b border-[#2a2a2a] flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-[#8d909a]" />
-            <h3 className="font-headline font-semibold text-[#e5e2e1]">Chat da Tarefa</h3>
+            <h3 className="font-headline font-semibold text-[#e5e2e1]">{t('kanban.taskChat')}</h3>
           </div>
           
           <div className="flex-1 overflow-y-auto p-5 space-y-6">
@@ -1119,7 +1122,7 @@ export function KanbanBoard() {
         newColumns[status].tasks.push({
           ...task,
           assignees: task.assignees ? task.assignees.map(a => ({ name: a, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a)}&background=random` })) : [],
-          date: task.dueDate || (task as any).date || 'Sem data',
+          date: task.dueDate || (task as any).date || t('kanban.noDate'),
         } as unknown as Task);
       }
     });
@@ -1281,7 +1284,7 @@ export function KanbanBoard() {
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#b7c4ff] hover:bg-[#b7c4ff]/90 text-[#002682] font-semibold transition-colors text-sm shadow-sm shadow-[#b7c4ff]/20"
           >
             <Plus className="w-4 h-4" />
-            Nova Tarefa
+            {t('task.new')}
           </button>
         </div>
 
@@ -1371,7 +1374,7 @@ export function KanbanBoard() {
           <div className="flex items-center gap-4">
             <input 
               type="text"
-              placeholder="Pesquisar tarefas..."
+              placeholder={t('kanban.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64 bg-[#1c1c1c] border border-[#2a2a2a] rounded-xl py-1.5 pl-4 pr-4 text-xs text-[#e5e2e1] focus:outline-none focus:border-[#b7c4ff]/50 transition-colors"
@@ -1395,9 +1398,9 @@ export function KanbanBoard() {
               return (
                 <div className="bg-[#131313] rounded-2xl border border-[#2a2a2a] p-12 flex flex-col items-center justify-center gap-4">
                   <Archive className="w-12 h-12 text-[#2a2a2a]" />
-                  <h3 className="text-lg font-headline font-semibold text-[#e5e2e1]">Nenhuma tarefa arquivada</h3>
+                  <h3 className="text-lg font-headline font-semibold text-[#e5e2e1]">{t('kanban.noArchivedTasks')}</h3>
                   <p className="text-sm text-[#8d909a] max-w-md text-center">
-                    Tarefas concluídas ou arquivadas aparecerão aqui.
+                    {t('kanban.archivedInfo')}
                   </p>
                 </div>
               );
@@ -1428,13 +1431,13 @@ export function KanbanBoard() {
                     <button
                       onClick={() => {
                         updateTask(task.id, { status: 'todo', completedAt: undefined });
-                        toast.success('Tarefa reaberta!');
+                        toast.success(t('kanban.taskReopened'));
                       }}
                       className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2a2a2a] hover:bg-[#333] text-[#8d909a] hover:text-[#e5e2e1] text-xs font-medium transition-colors"
-                      title="Reabrir tarefa"
+                      title={t('kanban.reopenTask')}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      Reabrir
+                      {t('kanban.reopen')}
                     </button>
                   </div>
                 ))}
@@ -1504,7 +1507,7 @@ export function KanbanBoard() {
                     }}
                     onComplete={() => {
                       updateTask(task.id, { status: 'archived', completedAt: new Date().toISOString() });
-                      toast.success('Tarefa concluída! ✓');
+                      toast.success(t('kanban.taskDone'));
                     }}
                     draggable
                     onDragStart={(e) => handleDragStart(e, task.id, key)}

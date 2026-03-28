@@ -50,7 +50,7 @@ export function ClientPortal() {
   };
 
   const tabs: { id: PortalTab; icon: React.ElementType; label: string }[] = [
-    { id: 'tasks', icon: CheckSquare, label: 'Solicitações' },
+    { id: 'tasks', icon: CheckSquare, label: t('portal.requests') },
     { id: 'brand', icon: SwatchBook, label: t('portal.myBrand') },
     { id: 'deliverables', icon: Package, label: t('portal.deliverables') },
   ];
@@ -97,7 +97,7 @@ export function ClientPortal() {
           className="flex items-center gap-2 text-xs text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-xl hover:bg-surface-container-high"
         >
           <LogOut className="w-4 h-4" />
-          <span>Sair</span>
+          <span>{t('portal.logout')}</span>
         </button>
       </header>
 
@@ -167,7 +167,7 @@ export function ClientPortal() {
                     {hub.colors.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">
-                          Paleta de Cores
+                          {t('portal.colorPalette')}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {hub.colors.map((c, i) => (
@@ -187,7 +187,7 @@ export function ClientPortal() {
                     {hub.fonts.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">
-                          Tipografia
+                          {t('portal.typography')}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {hub.fonts.map((f, i) => (
@@ -203,7 +203,7 @@ export function ClientPortal() {
                     {hub.logos.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">
-                          Logos
+                          {t('portal.logos')}
                         </p>
                         <div className="flex flex-wrap gap-3">
                           {hub.logos.map((l, i) => (
@@ -223,7 +223,7 @@ export function ClientPortal() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-xs text-primary hover:underline"
                       >
-                        Abrir no Figma →
+                        {t('portal.openFigma')}
                       </a>
                     )}
                   </div>
@@ -244,9 +244,9 @@ export function ClientPortal() {
           >
             <div className="flex items-center justify-between bg-surface-container-low p-6 rounded-3xl border border-surface-container-high">
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-on-surface">Solicitar Nova Tarefa</h2>
+                <h2 className="text-lg font-semibold text-on-surface">{t('portal.requestTitle')}</h2>
                 <p className="text-sm text-on-surface-variant">
-                  Você tem {activeTasksCount} de {maxActiveTasks} tarefas simultâneas em andamento.
+                  {t('portal.taskSlots', { current: activeTasksCount, max: maxActiveTasks })}
                 </p>
                 {/* Progress bar */}
                 <div className="w-full max-w-xs h-2 bg-surface-container rounded-full mt-3 overflow-hidden">
@@ -265,12 +265,12 @@ export function ClientPortal() {
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-5 h-5" />
-                Nova Solicitação
+                {t('portal.newRequest')}
               </button>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-4">Suas Solicitações</h3>
+              <h3 className="text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-4">{t('portal.yourRequests')}</h3>
               {clientTasks.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }}
@@ -278,7 +278,7 @@ export function ClientPortal() {
                   className="py-16 text-center text-on-surface-variant bg-surface-container-low rounded-3xl border border-surface-container-high"
                 >
                   <CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">Nenhuma solicitação encontrada.</p>
+                  <p className="text-sm">{t('portal.noRequests')}</p>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -299,14 +299,14 @@ export function ClientPortal() {
                         <p className="text-sm text-on-surface-variant line-clamp-1">{task.description}</p>
                       )}
                       {task.dueDate && (
-                        <p className="text-xs text-on-surface-variant mt-1">Prazo: {task.dueDate}</p>
+                        <p className="text-xs text-on-surface-variant mt-1">{t('portal.deadline', { date: task.dueDate })}</p>
                       )}
                     </div>
                     <span className={cn('text-xs px-3 py-1.5 rounded-full font-medium flex-shrink-0', statusColors[task.status] ?? statusColors['todo'])}>
-                      {task.status === 'todo' && 'Na Fila'}
-                      {task.status === 'in-progress' && 'Em Produção'}
-                      {task.status === 'review' && 'Aprovação'}
-                      {task.status === 'done' && 'Concluído'}
+                      {task.status === 'todo' && t('portal.status.todo')}
+                      {task.status === 'in-progress' && t('portal.status.inProgress')}
+                      {task.status === 'review' && t('portal.status.review')}
+                      {task.status === 'done' && t('portal.status.done')}
                     </span>
                     </motion.div>
                   ))}
@@ -326,7 +326,7 @@ export function ClientPortal() {
             className="py-16 text-center text-on-surface-variant"
           >
             <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Entregas estarão disponíveis em breve.</p>
+            <p className="text-sm">{t('portal.deliverablesSoon')}</p>
           </motion.div>
         )}
         </AnimatePresence>
