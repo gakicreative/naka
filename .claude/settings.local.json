@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(GIT_EDITOR=true git rebase --continue)",
-      "Bash(\"/c/Users/yurig/Documents/Sapiens Dev/naka/.env.development.local\":*)"
+      "Bash(\"/c/Users/yurig/Documents/Sapiens Dev/naka/.env.development.local\":*)",
+      "Bash(node fix_chat_layout.cjs)",
+      "Bash(npm run:*)"
     ]
   }
 }

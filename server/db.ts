@@ -2,9 +2,21 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { pgTable, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 
+// 1. Verifica se a variável de ambiente existe antes de tentar conectar
+if (!process.env.DATABASE_URL) {
+  throw new Error("❌ DATABASE_URL não está definida nas variáveis de ambiente!");
+}
+
 const { Pool } = pg;
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// 2. Configura o Pool com suporte a SSL para ambientes de produção (Railway)
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false } // Permite certificados autoassinados comuns em nuvem
+    : false // Desativa SSL no localhost (desenvolvimento)
+});
+
 export const db = drizzle(pool);
 
 // ── Users ────────────────────────────────────────────────────────────────────
@@ -41,33 +53,38 @@ export const notifications = pgTable('notifications', { id: text('id').primaryKe
 
 // ── DB Init (create tables if they don't exist) ────────────────────────────────
 export async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id            TEXT PRIMARY KEY,
-      email         TEXT UNIQUE NOT NULL,
-      name          TEXT NOT NULL,
-      password_hash TEXT NOT NULL,
-      role          TEXT NOT NULL DEFAULT 'cliente',
-      active_client_id TEXT,
-      created_at    TIMESTAMPTZ DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS invitations (
-      id         TEXT PRIMARY KEY,
-      role       TEXT NOT NULL,
-      used       BOOLEAN NOT NULL DEFAULT FALSE,
-      used_by    TEXT,
-      used_at    TEXT,
-      created_by TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS clients       (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS projects      (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS tasks         (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS transactions  (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS brandhubs     (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS pins          (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS labels        (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-    CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
-  `);
-  console.log('✅ DB tables ready');
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id            TEXT PRIMARY KEY,
+        email         TEXT UNIQUE NOT NULL,
+        name          TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        role          TEXT NOT NULL DEFAULT 'cliente',
+        active_client_id TEXT,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS invitations (
+        id         TEXT PRIMARY KEY,
+        role       TEXT NOT NULL,
+        used       BOOLEAN NOT NULL DEFAULT FALSE,
+        used_by    TEXT,
+        used_at    TEXT,
+        created_by TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS clients       (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS projects      (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS tasks         (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS transactions  (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS brandhubs     (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS pins          (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS labels        (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+    `);
+    console.log('✅ DB tables ready');
+  } catch (error) {
+    console.error('❌ Erro ao inicializar o banco de dados:', error);
+    throw error;
+  }
 }
