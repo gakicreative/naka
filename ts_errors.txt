@@ -1,0 +1,13 @@
+﻿src/components/AppProvider.tsx(8,26): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/components/modals/NewTaskModal.tsx(50,21): error TS2345: Argument of type '{ title: any; description: any; status: "todo"; priority: any; clientId: any; projectId: any; createdAt: string; assignees: any[]; labels: any[]; comments: any[]; attachments: any[]; }' is not assignable to parameter of type 'Omit<Task, "id">'.
+  Property 'dueDate' is missing in type '{ title: any; description: any; status: "todo"; priority: any; clientId: any; projectId: any; createdAt: string; assignees: any[]; labels: any[]; comments: any[]; attachments: any[]; }' but required in type 'Omit<Task, "id">'.
+src/lib/storageUtils.ts(3,26): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/BrandHubDetail.tsx(79,26): error TS2322: Type '{ key: string; color: BrandColor; }' is not assignable to type '{ color: BrandColor; }'.
+  Property 'key' does not exist on type '{ color: BrandColor; }'.
+src/pages/ClientDetail.tsx(763,20): error TS2322: Type '{ key: keyof ClientLegalInfo; label: string; value: string; }' is not assignable to type '{ label: string; value?: string; }'.
+  Property 'key' does not exist on type '{ label: string; value?: string; }'.
+src/pages/KanbanBoard.tsx(390,35): error TS2322: Type '{ key: string; label: TaskLabel; size: "sm"; }' is not assignable to type 'LabelTagProps'.
+  Property 'key' does not exist on type 'LabelTagProps'.
+src/pages/KanbanBoard.tsx(896,38): error TS2322: Type '{ key: string; label: TaskLabel; size: "sm"; onRemove: () => void; }' is not assignable to type 'LabelTagProps'.
+  Property 'key' does not exist on type 'LabelTagProps'.
+src/store/index.ts(300,26): error TS2339: Property 'env' does not exist on type 'ImportMeta'.

@@ -3,6 +3,13 @@ import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { db, users, invitations, pool } from '../db.js';
 import { requireAuth, setToken, clearToken, type AuthRequest } from '../auth.js';
+import passport from 'passport';
+
+declare module 'express-session' {
+  interface SessionData {
+    oauthInviteId?: string;
+  }
+}
 
 const router = Router();
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@naka.app';
@@ -74,11 +81,51 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ── POST /api/auth/logout ────────────────────────────────────────────────────
+// ── POST /api/auth/logout ──────────────────────────────────────────────────
 router.post('/logout', (_req, res) => {
   clearToken(res);
   res.json({ ok: true });
 });
+
+// ── GET /api/auth/google?invite=<id> ───────────────────────────────────
+router.get('/google', (req, res, next) => {
+  // Salva inviteId na session para usar depois no callback
+  if (req.query.invite) {
+    req.session.oauthInviteId = req.query.invite as string;
+  } else {
+    delete req.session.oauthInviteId;
+  }
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  })(req, res, next);
+});
+
+// ── GET /api/auth/google/callback ───────────────────────────────────
+router.get('/google/callback',
+  passport.authenticate('google', { session: false, failWithError: true }),
+  (req, res) => {
+    const user = req.user as { id: string; role: string; email: string; name: string; activeClientId?: string } | undefined;
+    if (!user) {
+      return res.redirect('/login?error=oauth_failed');
+    }
+    // Limpa o inviteId da session
+    delete req.session.oauthInviteId;
+
+    setToken(res, user.id, user.role);
+
+    const redirect = user.role === 'cliente' ? '/portal' : '/';
+    res.redirect(redirect);
+  },
+  // Handler de erro do passport.authenticate
+  (err: { message?: string }, _req: AuthRequest, res: import('express').Response) => {
+    const msg = err?.message || 'oauth_failed';
+    if (msg === 'invite_required' || msg === 'invite_invalid') {
+      return res.redirect(`/login?error=${msg}`);
+    }
+    return res.redirect('/login?error=oauth_failed');
+  }
+);
 
 // ── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', requireAuth, async (req: AuthRequest, res) => {

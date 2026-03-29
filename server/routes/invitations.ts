@@ -4,6 +4,19 @@ import { db, invitations } from '../db.js';
 import { requireAuth, type AuthRequest } from '../auth.js';
 
 const router = Router();
+
+// ── GET /api/invitations/check/:id (pública — sem auth) ───────────────────────
+router.get('/check/:id', async (req, res) => {
+  try {
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, req.params.id));
+    if (!invite) return res.status(404).json({ error: 'Convite não encontrado' });
+    if (invite.used) return res.status(410).json({ error: 'Convite já utilizado' });
+    res.json({ id: invite.id, role: invite.role, valid: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 router.use(requireAuth);
 
 // ── GET /api/invitations ─────────────────────────────────────────────────────

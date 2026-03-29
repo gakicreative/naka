@@ -1,8 +1,11 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDb } from './db.js';
+import './google-strategy.js'; // registra a strategy do Google
+import passport from 'passport';
 import authRouter from './routes/auth.js';
 import entitiesRouter from './routes/entities.js';
 import invitationsRouter from './routes/invitations.js';
@@ -17,6 +20,22 @@ const app = express();
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
+
+// Session — usada APENAS para transportar o inviteId durante o fluxo OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'naka-session-secret-dev',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 10 * 60 * 1000, // 10 minutos — só para o fluxo OAuth
+  },
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ── Static files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static(UPLOAD_DIR));

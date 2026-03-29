@@ -19,6 +19,7 @@ import { ClientDetail } from './pages/ClientDetail';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Finances } from './pages/Finances';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { ClientPortal } from './pages/portal/ClientPortal';
 import { AppProvider } from './components/AppProvider';
 import { AnimationProvider } from './contexts/AnimationContext';
@@ -33,6 +34,7 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Client Portal */}
           <Route

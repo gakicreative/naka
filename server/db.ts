@@ -24,7 +24,8 @@ export const users = pgTable('users', {
   id:            text('id').primaryKey(),
   email:         text('email').notNull().unique(),
   name:          text('name').notNull(),
-  passwordHash:  text('password_hash').notNull(),
+  passwordHash:  text('password_hash'),           // null para usuários OAuth
+  googleId:      text('google_id'),               // null para usuários com senha
   role:          text('role').notNull().default('cliente'),
   activeClientId: text('active_client_id'),
   createdAt:     timestamp('created_at').defaultNow(),
@@ -59,11 +60,14 @@ export async function initDb() {
         id            TEXT PRIMARY KEY,
         email         TEXT UNIQUE NOT NULL,
         name          TEXT NOT NULL,
-        password_hash TEXT NOT NULL,
+        password_hash TEXT,
+        google_id     TEXT,
         role          TEXT NOT NULL DEFAULT 'cliente',
         active_client_id TEXT,
         created_at    TIMESTAMPTZ DEFAULT NOW()
       );
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id TEXT;
+      ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
       CREATE TABLE IF NOT EXISTS invitations (
         id         TEXT PRIMARY KEY,
         role       TEXT NOT NULL,
