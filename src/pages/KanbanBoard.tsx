@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import { ChevronLeft, Plus, Archive, MoreHorizontal, ChevronDown, MessageSquare, Paperclip, Calendar, GripVertical, AlertCircle, X, Send, AlignLeft, MousePointerClick, Image as ImageIcon, Check, MessageSquareDashed, Type, Terminal, FolderHeart, Trash2, Edit2, CheckCircle2, Tag, EyeOff, RotateCcw, Users, Link2, Search, ListChecks, Layers } from 'lucide-react';
 import { LabelTag } from '../components/LabelTag';
 import { Link, useParams } from 'react-router-dom';
@@ -648,7 +649,7 @@ function DesignSpecField({ label, value, placeholder, onSave }: {
 
 function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { task: Task; onClose: () => void; onOpenFeedback: (url: string) => void; focusChat?: boolean; projectId?: string }) {
   const { t } = useTranslation();
-  const { updateTask, projects, updateProject } = useStore();
+  const { updateTask, projects, updateProject, addLabel, updateLabel, deleteLabel } = useStore();
   const storeLabels = useStore((s) => s.labels);
   const brandhubs = useStore((s) => s.brandhubs);
   const allTasks = useStore((s) => s.tasks);
@@ -663,6 +664,13 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
   const [localAssignees, setLocalAssignees] = useState<Assignee[]>(task.assignees);
   const [showAssigneePicker, setShowAssigneePicker] = useState(false);
   const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editLabelName, setEditLabelName] = useState('');
+  const [editLabelColor, setEditLabelColor] = useState('');
+  const [editLabelIcon, setEditLabelIcon] = useState('');
+  const [newLabelName, setNewLabelName] = useState('');
+  const [newLabelColor, setNewLabelColor] = useState('#b7c4ff');
+  const [newLabelIcon, setNewLabelIcon] = useState('solar:tag-linear');
   const [showSubTaskPicker, setShowSubTaskPicker] = useState(false);
   const [subTaskSearch, setSubTaskSearch] = useState('');
   const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -851,7 +859,7 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-[#1c1c1c] w-full max-w-4xl h-[85vh] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="bg-[#1c1c1c] w-full max-w-4xl h-[85vh] rounded-2xl border border-[#2a2a2a] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
 
         {/* ─── Gradient Header ─── */}
         {/* ─── Gradient Header ─── */}
@@ -887,38 +895,159 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
               const lbl = storeLabels.find(l => l.id === labelId);
               return lbl ? <LabelTag key={labelId} label={lbl} size="sm" onRemove={() => handleToggleTag(labelId)} /> : null;
             })}
-            {storeLabels.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowLabelPicker(v => !v)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-white/40 border border-dashed border-white/20 hover:border-white/50 hover:text-white/70 transition-colors"
-                >
-                  <Tag className="w-3 h-3" />
-                  <Plus className="w-2.5 h-2.5" />
-                </button>
-                {showLabelPicker && (
-                  <div className="absolute top-7 left-0 z-20 bg-[#1c1c1c] border border-[#2a2a2a] rounded-xl shadow-2xl p-3 w-48">
-                    <p className="text-[10px] text-[#8d909a] uppercase tracking-wider mb-2">Etiquetas</p>
-                    <div className="flex flex-col gap-1">
-                      {storeLabels.map(lbl => {
-                        const active = taskTags.includes(lbl.id);
-                        return (
-                          <button key={lbl.id} onClick={() => handleToggleTag(lbl.id)}
-                            className={cn("flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors text-left",
-                              active ? "opacity-100" : "opacity-60 hover:opacity-100"
-                            )}
-                          >
-                            <LabelTag label={lbl} size="sm" />
-                            {active && <Check className="w-3.5 h-3.5 text-[#b7c4ff] ml-auto" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button onClick={() => setShowLabelPicker(false)} className="mt-2 w-full text-xs text-[#8d909a] hover:text-[#e5e2e1] py-1 transition-colors">Fechar</button>
+            <div className="relative">
+              <button
+                onClick={() => setShowLabelPicker(v => !v)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-white/40 border border-dashed border-white/20 hover:border-white/50 hover:text-white/70 transition-colors"
+              >
+                <Tag className="w-3 h-3" />
+                <Plus className="w-2.5 h-2.5" />
+              </button>
+              {showLabelPicker && (
+                <div className="absolute top-7 left-0 z-20 bg-[#181818] border border-[#2a2a2a] rounded-2xl shadow-2xl p-3 w-72" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] text-[#8d909a] uppercase tracking-wider font-medium">Etiquetas</p>
+                    <button onClick={() => setShowLabelPicker(false)} className="text-[#8d909a] hover:text-white transition-colors">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
+
+                  {/* Existing labels with toggle + edit + delete */}
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto mb-2">
+                    {storeLabels.length === 0 && (
+                      <p className="text-xs text-[#8d909a] text-center py-2">Nenhuma etiqueta ainda</p>
+                    )}
+                    {storeLabels.map(lbl => {
+                      const active = taskTags.includes(lbl.id);
+                      const isEditing = editingLabelId === lbl.id;
+                      return (
+                        <div key={lbl.id}>
+                          {isEditing ? (
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-[#242424]">
+                              <input
+                                type="color"
+                                value={editLabelColor}
+                                onChange={e => setEditLabelColor(e.target.value)}
+                                className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
+                              />
+                              <input
+                                autoFocus
+                                value={editLabelName}
+                                onChange={e => setEditLabelName(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    updateLabel(lbl.id, { title: editLabelName, color: editLabelColor, iconName: editLabelIcon });
+                                    setEditingLabelId(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingLabelId(null);
+                                  }
+                                }}
+                                className="flex-1 bg-transparent text-xs text-white outline-none min-w-0"
+                                placeholder="Nome"
+                              />
+                              <button
+                                onClick={() => {
+                                  updateLabel(lbl.id, { title: editLabelName, color: editLabelColor, iconName: editLabelIcon });
+                                  setEditingLabelId(null);
+                                }}
+                                className="text-[#b7c4ff] hover:text-white shrink-0"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 group px-1 py-0.5 rounded-lg hover:bg-white/5 transition-colors">
+                              <button
+                                onClick={() => handleToggleTag(lbl.id)}
+                                className={cn("flex items-center gap-1.5 flex-1 min-w-0 text-left transition-opacity",
+                                  active ? "opacity-100" : "opacity-60 hover:opacity-100"
+                                )}
+                              >
+                                <LabelTag label={lbl} size="sm" />
+                                {active && <Check className="w-3.5 h-3.5 text-[#b7c4ff] ml-auto shrink-0" />}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingLabelId(lbl.id);
+                                  setEditLabelName(lbl.title);
+                                  setEditLabelColor(lbl.color);
+                                  setEditLabelIcon(lbl.iconName);
+                                }}
+                                className="p-1 text-[#8d909a] hover:text-white opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => deleteLabel(lbl.id)}
+                                className="p-1 text-[#8d909a] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Create new label */}
+                  <div className="border-t border-[#2a2a2a] pt-2">
+                    <p className="text-[10px] text-[#8d909a] uppercase tracking-wider mb-1.5">Nova etiqueta</p>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={newLabelColor}
+                        onChange={e => setNewLabelColor(e.target.value)}
+                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
+                      />
+                      <input
+                        value={newLabelName}
+                        onChange={e => setNewLabelName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newLabelName.trim()) {
+                            addLabel({ title: newLabelName.trim(), color: newLabelColor, iconName: newLabelIcon });
+                            setNewLabelName('');
+                          }
+                        }}
+                        className="flex-1 bg-[#242424] text-xs text-white px-2 py-1 rounded-lg outline-none placeholder:text-[#8d909a] min-w-0 border border-[#2a2a2a] focus:border-[#b7c4ff]/40"
+                        placeholder="Nome da etiqueta"
+                      />
+                      <button
+                        onClick={() => {
+                          if (!newLabelName.trim()) return;
+                          addLabel({ title: newLabelName.trim(), color: newLabelColor, iconName: newLabelIcon });
+                          setNewLabelName('');
+                        }}
+                        className="px-2 py-1 rounded-lg bg-[#b7c4ff]/20 text-[#b7c4ff] text-xs hover:bg-[#b7c4ff]/30 transition-colors shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* Icon picker */}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {[
+                        'solar:tag-linear', 'solar:check-circle-linear', 'solar:clock-circle-linear',
+                        'solar:fire-linear', 'solar:star-linear', 'solar:flag-linear',
+                        'solar:bolt-linear', 'solar:heart-linear', 'solar:send-square-linear',
+                        'solar:close-circle-linear',
+                      ].map(icon => (
+                        <button
+                          key={icon}
+                          onClick={() => setNewLabelIcon(icon)}
+                          className={cn(
+                            'w-6 h-6 flex items-center justify-center rounded-lg transition-colors',
+                            newLabelIcon === icon ? 'bg-[#b7c4ff]/20 text-[#b7c4ff]' : 'text-[#8d909a] hover:text-white hover:bg-white/5'
+                          )}
+                          title={icon}
+                        >
+                          <Icon icon={icon} className="w-3.5 h-3.5" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="flex-1" />
             <div className="relative flex items-center gap-1">
               {localAssignees.length > 0 && (

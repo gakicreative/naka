@@ -77,13 +77,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const me = await meRes.json();
+        const u = me.user ?? me;
         setSession({
-          role: me.role,
-          name: me.name,
-          email: me.email,
-          activeClientId: me.activeClientId,
+          role: u.role,
+          name: u.name,
+          email: u.email,
+          activeClientId: u.activeClientId,
         });
-        setUserName(me.name);
+        setUserName(u.name);
 
         const [
           clients, projects, tasks, transactions,

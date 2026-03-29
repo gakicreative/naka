@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Palette, Shield, Key, Bell, Globe, Tag, Monitor, Moon, Sun, Users, Plus, Copy, Check } from 'lucide-react';
+import { User, Palette, Shield, Key, Bell, Globe, Monitor, Moon, Sun, Users, Plus, Copy, Check, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useApp } from '../components/AppProvider';
 import { useStore } from '../store';
@@ -7,10 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'motion/react';
-import { LabelTag } from '../components/LabelTag';
-import { ManageLabelsModal } from '../components/modals/ManageLabelsModal';
-
-type Tab = 'profile' | 'visual' | 'permissions' | 'security' | 'notifications' | 'localization' | 'labels' | 'team';
+type Tab = 'profile' | 'visual' | 'permissions' | 'security' | 'notifications' | 'localization' | 'team';
 
 export function Settings() {
   const { t, i18n } = useTranslation();
@@ -22,9 +19,6 @@ export function Settings() {
 
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [displayName, setDisplayName] = useState(userName);
-  const [isLabelsModalOpen, setLabelsModalOpen] = useState(false);
-  const labels = useStore((s) => s.labels);
-
   // Invites state
   const [invites, setInvites] = useState<any[]>([]);
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
@@ -38,7 +32,6 @@ export function Settings() {
     { id: 'security',      icon: Key,     label: t('settings.tabs.security') },
     { id: 'notifications', icon: Bell,    label: t('settings.tabs.notifications') },
     { id: 'localization',  icon: Globe,   label: t('settings.tabs.localization') },
-    { id: 'labels',        icon: Tag,     label: t('settings.tabs.labels') },
   ];
 
   const visibleTabs = tabs.filter(tab => !tab.adminOnly || session?.role === 'admin');
@@ -88,10 +81,31 @@ export function Settings() {
     setTimeout(() => setCopiedInviteId(null), 2000);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleCancelInvite = async (inviteId: string) => {
+    try {
+      const res = await fetch(`/api/invitations/${inviteId}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error();
+      toast.success('Convite cancelado.');
+      fetchInvites();
+    } catch {
+      toast.error('Erro ao cancelar convite.');
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUserName(displayName);
-    toast.success(t('settings.profile.saveSuccess'));
+    try {
+      await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: displayName }),
+        credentials: 'include',
+      });
+      setUserName(displayName);
+      toast.success(t('settings.profile.saveSuccess'));
+    } catch {
+      toast.error('Erro ao salvar perfil.');
+    }
   };
 
   const handleLanguageChange = (lang: 'pt-BR' | 'en-US') => {
@@ -216,6 +230,13 @@ export function Settings() {
                                 ) : (
                                   <Copy className="w-4 h-4" />
                                 )}
+                              </button>
+                              <button
+                                onClick={() => handleCancelInvite(invite.id)}
+                                className="p-2 rounded-lg hover:bg-red-500/10 text-on-surface-variant hover:text-red-500 transition-colors"
+                                title="Cancelar convite"
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </>
                           )}
@@ -437,59 +458,10 @@ export function Settings() {
             </motion.section>
           )}
 
-          {activeTab === 'labels' && (
-            <motion.section
-              key="labels"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="bg-surface-container-low rounded-3xl p-6 md:p-8 border border-surface-container-high"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="font-headline font-semibold text-xl">{t('settings.tabs.labels')}</h2>
-                  <p className="text-sm text-on-surface-variant mt-1">
-                    Crie etiquetas personalizadas para classificar as tarefas do Kanban.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setLabelsModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/8 hover:bg-white/12 border border-white/10 text-sm font-medium text-on-surface transition-colors"
-                >
-                  <Tag className="w-4 h-4" />
-                  {t('settings.labels.manage')}
-                </button>
-              </div>
-
-              {labels.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {labels.map((label) => (
-                    <LabelTag key={label.id} label={label} size="md" />
-                  ))}
-                </div>
-              ) : (
-                <div className="py-12 text-center text-on-surface-variant">
-                  <Tag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">{t('settings.labels.noLabels')}</p>
-                  <button
-                    onClick={() => setLabelsModalOpen(true)}
-                    className="mt-3 px-4 py-2 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium text-on-surface transition-colors"
-                  >
-                    {t('settings.labels.createFirst')}
-                  </button>
-                </div>
-              )}
-            </motion.section>
-          )}
           </AnimatePresence>
         </div>
       </div>
 
-      <ManageLabelsModal
-        isOpen={isLabelsModalOpen}
-        onClose={() => setLabelsModalOpen(false)}
-      />
     </div>
   );
 }

@@ -43,4 +43,18 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
+// ── DELETE /api/invitations/:id ─────────────────────────────────────────────
+router.delete('/:id', async (req: AuthRequest, res) => {
+  if (req.userRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, req.params.id));
+    if (!invite) return res.status(404).json({ error: 'Convite não encontrado' });
+    if (invite.used) return res.status(400).json({ error: 'Não é possível cancelar convite já utilizado' });
+    await db.delete(invitations).where(eq(invitations.id, req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 export default router;

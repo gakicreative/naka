@@ -52,7 +52,8 @@ export function Login() {
         toast.error((err as any).error || t('login.error'));
         return;
       }
-      const user = await res.json();
+      const data = await res.json();
+      const user = data.user ?? data;
       setSession({
         role: user.role,
         name: user.name,
