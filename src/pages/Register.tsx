@@ -86,9 +86,6 @@ export function Register() {
       .finally(() => setLoading(false));
   }, [inviteId]);
 
-  const handleGoogleLogin = () => {
-    window.location.href = `/api/auth/google?invite=${inviteId}`;
-  };
 
   const handlePasswordRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,13 +162,14 @@ export function Register() {
               </div>
 
               <div className="space-y-3">
-                <button
-                  onClick={handleGoogleLogin}
+                {/* usa <a> nativo para o SW não interceptar */}
+                <a
+                  href={`/api/auth/google?invite=${inviteId}`}
                   className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-surface-container border border-surface-container-high text-on-surface font-medium transition-all hover:bg-surface-container-high active:scale-[0.98]"
                 >
                   <GoogleIcon />
                   Continuar com Google
-                </button>
+                </a>
 
                 <div className="flex items-center gap-3">
                   <div className="h-px flex-1 bg-surface-container-high" />

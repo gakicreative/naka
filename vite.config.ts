@@ -13,6 +13,19 @@ export default defineConfig(({mode}) => {
      VitePWA({
        registerType: 'autoUpdate',
        devOptions: { enabled: true },
+       workbox: {
+         // ❗ IMPORTANTE: Service Worker NÃO deve interceptar rotas de API/OAuth
+         // Sem isso, o SW serve index.html em cache para /api/auth/google
+         // bloqueando o redirect do OAuth para o Google.
+         navigateFallbackDenylist: [/^\/api\//],
+         // Também não fazer cache de rotas de API
+         runtimeCaching: [
+           {
+             urlPattern: /^\/api\//,
+             handler: 'NetworkOnly',
+           },
+         ],
+       },
        manifest: {
          name: 'Naka OS',
          short_name: 'Naka OS',

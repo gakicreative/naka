@@ -113,15 +113,14 @@ export function Login() {
               {OAUTH_ERROR_MESSAGES[oauthError] || 'Erro ao autenticar com Google.'}
             </div>
           )}
-          {/* Botão Google */}
-          <button
-            type="button"
-            onClick={() => { window.location.href = '/api/auth/google'; }}
+          {/* Botão Google — usa <a> nativo para o SW não interceptar */}
+          <a
+            href="/api/auth/google"
             className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-surface-container border border-surface-container-high text-on-surface font-medium transition-all hover:bg-surface-container-high active:scale-[0.98]"
           >
             <GoogleIcon />
             Entrar com Google
-          </button>
+          </a>
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-surface-container-high" />
