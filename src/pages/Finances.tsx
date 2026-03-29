@@ -26,20 +26,20 @@ const STATUS_COLORS: Record<Transaction['status'], string> = {
 const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 function getLast6Months() {
+  const now = new Date();
   const result = [];
   for (let i = 5; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     result.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTHS_PT[d.getMonth()] });
   }
   return result;
 }
 
 function getMonthOptions() {
+  const now = new Date();
   const opts: { label: string; value: string }[] = [{ label: 'Todos os meses', value: '' }];
   for (let i = 0; i < 12; i++) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const label = `${MONTHS_PT[d.getMonth()]} ${d.getFullYear()}`;
     opts.push({ label, value });
