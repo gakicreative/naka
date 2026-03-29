@@ -847,7 +847,6 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
     { id: 'overview', label: 'Visão Geral', icon: Layers },
     { id: 'checklist', label: 'Checklist', icon: ListChecks },
     { id: 'assets', label: 'Ativos', icon: FolderHeart },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
   ];
 
   return (
@@ -971,36 +970,43 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
           </div>
         </div>
 
-        {/* ─── Tab Bar ─── */}
-        <div className="flex-shrink-0 flex gap-1 p-1 bg-[#1c1c1c] border-b border-white/5">
-          {TASK_TABS.map(tab => {
-            const TabIcon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn('flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors',
-                  activeTab === tab.id ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
-                )}
-              >
-                <TabIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* ─── Body: Left tabs + Right chat ─── */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
 
-        {/* ─── Tab Content ─── */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15 }}
-              className={cn("h-full", activeTab === 'chat' ? "flex flex-col" : "overflow-y-auto")}
-            >
+          {/* Left column: tab bar + content */}
+          <div className="flex-1 flex flex-col min-w-0 border-r border-[#2a2a2a]">
+
+            {/* ─── Tab Bar ─── */}
+            <div className="flex-shrink-0 flex gap-1 p-1 bg-[#1c1c1c] border-b border-white/5">
+              {TASK_TABS.map(tab => {
+                const TabIcon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn('flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors',
+                      activeTab === tab.id ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
+                    )}
+                  >
+                    <TabIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ─── Tab Content ─── */}
+            <div className="flex-1 overflow-hidden min-h-0">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="h-full overflow-y-auto"
+                >
+
 
               {/* ── Visão Geral ── */}
               {activeTab === 'overview' && (
@@ -1289,9 +1295,13 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
                 </div>
               )}
 
-              {/* ── Chat ── */}
-              {activeTab === "chat" && (
-                <>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Right column: Chat (always visible) */}
+          <div className="w-[360px] flex flex-col flex-shrink-0">
                   <div className="flex-1 overflow-y-auto p-5 space-y-6">
                     {messages.map((msg) => {
                       const isCurrentUser = msg.senderId === MOCK_USER.uid;
@@ -1358,11 +1368,8 @@ function TaskModal({ task, onClose, onOpenFeedback, focusChat, projectId }: { ta
                       </div>
                     </div>
                   </div>
-                </>
-              )}
+          </div>
 
-            </motion.div>
-          </AnimatePresence>
         </div>
       </div>
     </div>
