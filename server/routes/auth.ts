@@ -102,13 +102,23 @@ router.get('/google', (req, res, next) => {
 });
 
 // ── GET /api/auth/google/callback ───────────────────────────────────
-router.get('/google/callback',
-  passport.authenticate('google', { session: false, failWithError: true }),
-  (req, res) => {
-    const user = req.user as { id: string; role: string; email: string; name: string; activeClientId?: string } | undefined;
+// Usa custom callback para tratar erros corretamente (error handler inline
+// exige 4 parâmetros que TypeScript não aceita facilmente via Router).
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false }, (err: Error | null, user: { id: string; role: string; name: string; email: string; activeClientId?: string } | false) => {
+    if (err) {
+      console.error('Google OAuth error:', err);
+      const msg = (err as { message?: string })?.message || '';
+      if (msg === 'invite_required' || msg === 'invite_invalid') {
+        return res.redirect(`/login?error=${msg}`);
+      }
+      return res.redirect('/login?error=oauth_failed');
+    }
+
     if (!user) {
       return res.redirect('/login?error=oauth_failed');
     }
+
     // Limpa o inviteId da session
     delete req.session.oauthInviteId;
 
@@ -116,16 +126,8 @@ router.get('/google/callback',
 
     const redirect = user.role === 'cliente' ? '/portal' : '/';
     res.redirect(redirect);
-  },
-  // Handler de erro do passport.authenticate
-  (err: { message?: string }, _req: AuthRequest, res: import('express').Response) => {
-    const msg = err?.message || 'oauth_failed';
-    if (msg === 'invite_required' || msg === 'invite_invalid') {
-      return res.redirect(`/login?error=${msg}`);
-    }
-    return res.redirect('/login?error=oauth_failed');
-  }
-);
+  })(req, res, next);
+});
 
 // ── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', requireAuth, async (req: AuthRequest, res) => {
