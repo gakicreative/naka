@@ -13,13 +13,20 @@ import { Tasks } from './pages/Tasks';
 import { KanbanBoard } from './pages/KanbanBoard';
 import { Settings } from './pages/Settings';
 import { Projects } from './pages/Projects';
+import { BrandHub } from './pages/BrandHub';
+import { BrandHubDetail } from './pages/BrandHubDetail';
+import { ClientDetail } from './pages/ClientDetail';
+import { ProjectDetail } from './pages/ProjectDetail';
+import { Finances } from './pages/Finances';
 import { Login } from './pages/Login';
 import { ClientPortal } from './pages/portal/ClientPortal';
 import { AppProvider } from './components/AppProvider';
+import { AnimationProvider } from './contexts/AnimationContext';
 import { Toaster } from 'sonner';
 
 export default function App() {
   return (
+    <AnimationProvider>
     <AppProvider>
       <Toaster position="top-right" />
       <BrowserRouter>
@@ -55,6 +62,14 @@ export default function App() {
               }
             />
             <Route
+              path="clients/:clientId"
+              element={
+                <RoleGuard allow={['admin', 'socio', 'seeder']}>
+                  <ClientDetail />
+                </RoleGuard>
+              }
+            />
+            <Route
               path="clients/:clientId/tasks"
               element={
                 <RoleGuard allow={['admin', 'socio', 'seeder']}>
@@ -66,11 +81,23 @@ export default function App() {
             {/* All authenticated users */}
             <Route path="tasks" element={<Tasks />} />
             <Route path="projects" element={<Projects />} />
+            <Route path="projects/:projectId" element={<ProjectDetail />} />
             <Route path="projects/:projectId/tasks" element={<KanbanBoard />} />
+            <Route path="brand-hub" element={<BrandHub />} />
+            <Route path="brand-hub/:hubId" element={<BrandHubDetail />} />
+            <Route
+              path="finances"
+              element={
+                <RoleGuard allow={['admin']}>
+                  <Finances />
+                </RoleGuard>
+              }
+            />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>
     </AppProvider>
+    </AnimationProvider>
   );
 }

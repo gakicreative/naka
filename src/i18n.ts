@@ -278,6 +278,52 @@ const resources = {
         description: 'Encontramos a identidade visual de <strong>{{name}}</strong>. Deseja aplicar?',
         ignore: 'Ignorar',
         apply: 'Aplicar'
+      },
+      finances: {
+        title: 'Finanças',
+        income: 'Receitas',
+        expenses: 'Despesas',
+        balance: 'Saldo',
+        receivable: 'A Receber',
+        newTransaction: 'Nova Transação',
+        noTransactions: 'Nenhuma transação encontrada.',
+        clearFilters: 'Limpar filtros',
+        allMonths: 'Todos os meses',
+        allClients: 'Todos os clientes',
+        chartTitle: 'Fluxo dos últimos 6 meses',
+        clientRevenue: 'Faturamento por Cliente',
+        accountsReceivable: 'Contas a Receber',
+        markAsPaid: 'Marcar como pago',
+        recurring: 'Recorrente',
+        status: {
+          paid: 'Pago',
+          pending: 'Pendente',
+          overdue: 'Vencido',
+        },
+        table: {
+          description: 'Descrição',
+          amount: 'Valor',
+          category: 'Categoria',
+          client: 'Cliente',
+          date: 'Data',
+          status: 'Status'
+        }
+      },
+      brandhub: {
+        title: 'Brand Hub',
+        newHub: 'Novo Hub',
+        noHubs: 'Nenhum Brand Hub criado ainda.',
+        colors: 'Cores',
+        fonts: 'Fontes',
+        logos: 'Logos',
+        keywords: 'Palavras-chave',
+        identity: 'Identidade da Marca',
+        figma: 'Abrir no Figma',
+        website: 'Site da Marca',
+        extract: 'Extrair do site',
+        extracting: 'Extraindo...',
+        create: 'Criar Brand Hub',
+        creating: 'Criando...'
       }
     }
   },
@@ -557,6 +603,52 @@ const resources = {
         description: 'We found the visual identity of <strong>{{name}}</strong>. Would you like to apply it?',
         ignore: 'Ignore',
         apply: 'Apply'
+      },
+      finances: {
+        title: 'Finances',
+        income: 'Income',
+        expenses: 'Expenses',
+        balance: 'Balance',
+        receivable: 'Receivable',
+        newTransaction: 'New Transaction',
+        noTransactions: 'No transactions found.',
+        clearFilters: 'Clear filters',
+        allMonths: 'All months',
+        allClients: 'All clients',
+        chartTitle: 'Last 6 months',
+        clientRevenue: 'Revenue by Client',
+        accountsReceivable: 'Accounts Receivable',
+        markAsPaid: 'Mark as paid',
+        recurring: 'Recurring',
+        status: {
+          paid: 'Paid',
+          pending: 'Pending',
+          overdue: 'Overdue',
+        },
+        table: {
+          description: 'Description',
+          amount: 'Amount',
+          category: 'Category',
+          client: 'Client',
+          date: 'Date',
+          status: 'Status'
+        }
+      },
+      brandhub: {
+        title: 'Brand Hub',
+        newHub: 'New Hub',
+        noHubs: 'No Brand Hubs created yet.',
+        colors: 'Colors',
+        fonts: 'Fonts',
+        logos: 'Logos',
+        keywords: 'Keywords',
+        identity: 'Brand Identity',
+        figma: 'Open in Figma',
+        website: 'Brand Website',
+        extract: 'Extract from website',
+        extracting: 'Extracting...',
+        create: 'Create Brand Hub',
+        creating: 'Creating...'
       }
     }
   }

@@ -37,11 +37,11 @@ export function Dashboard() {
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
   const monthlyRevenue = transactions
-    .filter((t) => t.type === 'in' && t.status === 'Concluído' && t.date >= startOfMonth && t.date <= endOfMonth)
+    .filter((t) => t.type === 'in' && t.status === 'paid' && t.date >= startOfMonth && t.date <= endOfMonth)
     .reduce((acc, t) => acc + t.amount, 0);
 
   const pendingInvoices = transactions
-    .filter((t) => t.type === 'in' && t.status === 'Pendente')
+    .filter((t) => t.type === 'in' && (t.status === 'pending' || t.status === 'overdue'))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const formatCurrency = (value: number) => {

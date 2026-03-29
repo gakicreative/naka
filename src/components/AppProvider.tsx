@@ -3,6 +3,12 @@ import { useStore, Client, Project, Task, Transaction, BrandHub, Pin, TaskLabel,
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
+import {
+  MOCK_SESSION, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
+  MOCK_LABELS, MOCK_TRANSACTIONS, MOCK_NOTIFICATIONS, MOCK_BRANDHUBS,
+} from '../lib/mockData';
+
+const MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
 const USER_NAME_KEY = 'nakaos-user-name';
 
@@ -51,8 +57,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserNameState(trimmed);
   };
 
+  // Mock mode: bypass Firebase entirely
+  useEffect(() => {
+    if (!MOCK) return;
+    setSession(MOCK_SESSION);
+    setClients(MOCK_CLIENTS);
+    setProjects(MOCK_PROJECTS);
+    setTasks(MOCK_TASKS);
+    setTransactions(MOCK_TRANSACTIONS);
+    setLabels(MOCK_LABELS);
+    setNotifications(MOCK_NOTIFICATIONS);
+    setBrandHubs(MOCK_BRANDHUBS);
+    setPins([]);
+    setUserName(MOCK_SESSION.name);
+    setIsAuthReady(true);
+  }, []);
+
   // Firebase Auth Listener
   useEffect(() => {
+    if (MOCK) return;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -133,7 +156,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [setSession]);
 
   useEffect(() => {
-    if (!isAuthReady || !auth.currentUser) return;
+    if (MOCK || !isAuthReady || !auth.currentUser) return;
 
     const unsubscribes: (() => void)[] = [];
 

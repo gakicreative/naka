@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +23,14 @@ const item = {
 
 export function Projects() {
   const { t } = useTranslation();
-  const projects = useStore((state) => state.projects);
+  const allProjects = useStore((state) => state.projects);
+  const session = useStore((state) => state.session);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+
+  // Seeders only see projects they belong to
+  const projects = session?.role === 'seeder'
+    ? allProjects.filter((p) => p.teamMembers?.some((m) => m.name === session.name))
+    : allProjects;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">

@@ -5,24 +5,35 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function extractBrandFromUrl(url: string) {
+function domainToBrandName(domain: string): string {
+  // e.g. "acme-studio.com" → "Acme Studio"
+  const base = domain.split('.')[0];
+  return base
+    .split(/[-_]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+export async function extractBrandFromUrl(url: string): Promise<{
+  logo: string | null;
+  brandName: string;
+  colors: string[];
+} | null> {
   try {
     const domain = new URL(url).hostname.replace('www.', '');
-    
-    // Clearbit Logo API is a free, reliable way to get company logos
+    const brandName = domainToBrandName(domain);
     const logoUrl = `https://logo.clearbit.com/${domain}`;
-    
-    // Test if the image exists
+
     const response = await fetch(logoUrl, { method: 'HEAD' });
-    
-    if (response.ok) {
-      return {
-        logo: logoUrl,
-        colors: ['#000000', '#FFFFFF'] // Clearbit doesn't provide colors, return defaults
-      };
+    if (!response.ok) {
+      return { logo: null, brandName, colors: [] };
     }
-    
-    return null;
+
+    // Dynamically import color extraction to keep initial bundle lean
+    const { extractDominantColors } = await import('./colorUtils');
+    const colors = await extractDominantColors(logoUrl, 4);
+
+    return { logo: logoUrl, brandName, colors };
   } catch (error) {
     console.error('Error extracting brand:', error);
     return null;
