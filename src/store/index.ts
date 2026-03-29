@@ -1,7 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { db } from '../lib/firebase';
-import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+
+async function api(method: string, path: string, body?: unknown) {
+  const res = await fetch(path, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`API ${method} ${path} failed: ${res.status}`);
+  return res.json();
+}
 
 export interface UserSession {
   role: 'admin' | 'socio' | 'seeder' | 'cliente';
@@ -376,44 +385,50 @@ export const useStore = create<AppState>()(
 
       addPin: async (pin) => {
         const id = genId();
-        if (MOCK) { set(s => ({ pins: [...s.pins, { ...pin, id, createdAt: new Date().toISOString() }] })); return; }
-        const docRef = doc(collection(db, 'pins'));
-        await setDoc(docRef, { ...pin, id: docRef.id, createdAt: new Date().toISOString() });
+        const newPin = { ...pin, id, createdAt: new Date().toISOString() };
+        if (MOCK) { set(s => ({ pins: [...s.pins, newPin] })); return; }
+        await api('POST', '/api/pins', newPin);
+        set(s => ({ pins: [...s.pins, newPin] }));
       },
       updatePin: async (id, data) => {
         if (MOCK) { set(s => ({ pins: s.pins.map(p => p.id === id ? { ...p, ...data } : p) })); return; }
-        await updateDoc(doc(db, 'pins', id), data);
+        await api('PATCH', `/api/pins/${id}`, data);
+        set(s => ({ pins: s.pins.map(p => p.id === id ? { ...p, ...data } : p) }));
       },
       deletePin: async (id) => {
         if (MOCK) { set(s => ({ pins: s.pins.filter(p => p.id !== id) })); return; }
-        await deleteDoc(doc(db, 'pins', id));
+        await api('DELETE', `/api/pins/${id}`);
+        set(s => ({ pins: s.pins.filter(p => p.id !== id) }));
       },
 
       readNotificationIds: [],
       markNotificationAsRead: async (id) => {
         if (MOCK) { set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) })); return; }
-        await updateDoc(doc(db, 'notifications', id), { read: true });
+        await api('PATCH', `/api/notifications/${id}`, { read: true });
+        set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) }));
       },
       clearNotifications: async () => {
         if (MOCK) { set({ notifications: [] }); return; }
         const notifications = get().notifications;
-        for (const n of notifications) {
-          await deleteDoc(doc(db, 'notifications', n.id));
-        }
+        await Promise.all(notifications.map(n => api('DELETE', `/api/notifications/${n.id}`)));
+        set({ notifications: [] });
       },
       setNotifications: (notifications) => set({ notifications }),
 
       addLabel: async (label) => {
         const id = genId();
-        if (MOCK) { set(s => ({ labels: [...s.labels, { ...label, id }] })); return; }
-        const docRef = doc(collection(db, 'labels'));
-        await setDoc(docRef, { ...label, id: docRef.id });
+        const newLabel = { ...label, id };
+        if (MOCK) { set(s => ({ labels: [...s.labels, newLabel] })); return; }
+        await api('POST', '/api/labels', newLabel);
+        set(s => ({ labels: [...s.labels, newLabel] }));
       },
       updateLabel: async (id, label) => {
         if (MOCK) { set(s => ({ labels: s.labels.map(l => l.id === id ? { ...l, ...label } : l) })); return; }
-        await updateDoc(doc(db, 'labels', id), label);
+        await api('PATCH', `/api/labels/${id}`, label);
+        set(s => ({ labels: s.labels.map(l => l.id === id ? { ...l, ...label } : l) }));
       },
       deleteLabel: async (id) => {
+        const tasks = get().tasks;
         if (MOCK) {
           set(s => ({
             labels: s.labels.filter(l => l.id !== id),
@@ -421,15 +436,16 @@ export const useStore = create<AppState>()(
           }));
           return;
         }
-        await deleteDoc(doc(db, 'labels', id));
-        const tasks = get().tasks;
+        await api('DELETE', `/api/labels/${id}`);
+        set(s => ({ labels: s.labels.filter(l => l.id !== id) }));
         await Promise.all(
           tasks
             .filter(t => t.tags?.includes(id))
-            .map(t => updateDoc(doc(db, 'tasks', t.id), {
-              tags: t.tags!.filter((tag) => tag !== id)
-            }))
+            .map(t => api('PATCH', `/api/tasks/${t.id}`, { tags: t.tags!.filter(tag => tag !== id) }))
         );
+        set(s => ({
+          tasks: s.tasks.map(t => t.tags?.includes(id) ? { ...t, tags: t.tags!.filter(tag => tag !== id) } : t),
+        }));
       },
       setLabels: (labels) => set({ labels }),
 
@@ -442,81 +458,101 @@ export const useStore = create<AppState>()(
 
       addClient: async (client) => {
         const id = genId();
-        if (MOCK) { set(s => ({ clients: [...s.clients, { ...client, id }] })); return; }
-        const docRef = doc(collection(db, 'clients'));
-        await setDoc(docRef, { ...client, id: docRef.id });
+        const newClient = { ...client, id };
+        if (MOCK) { set(s => ({ clients: [...s.clients, newClient] })); return; }
+        await api('POST', '/api/clients', newClient);
+        set(s => ({ clients: [...s.clients, newClient] }));
       },
       updateClient: async (id, client) => {
         if (MOCK) { set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...client } : c) })); return; }
-        await updateDoc(doc(db, 'clients', id), client);
+        await api('PATCH', `/api/clients/${id}`, client);
+        set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...client } : c) }));
       },
       deleteClient: async (id) => {
         if (MOCK) { set(s => ({ clients: s.clients.filter(c => c.id !== id) })); return; }
-        await deleteDoc(doc(db, 'clients', id));
+        await api('DELETE', `/api/clients/${id}`);
+        set(s => ({ clients: s.clients.filter(c => c.id !== id) }));
       },
 
       addProject: async (project) => {
         const id = genId();
-        if (MOCK) { set(s => ({ projects: [...s.projects, { ...project, id }] })); return; }
-        const docRef = doc(collection(db, 'projects'));
-        await setDoc(docRef, { ...project, id: docRef.id });
+        const newProject = { ...project, id };
+        if (MOCK) { set(s => ({ projects: [...s.projects, newProject] })); return; }
+        await api('POST', '/api/projects', newProject);
+        set(s => ({ projects: [...s.projects, newProject] }));
       },
       updateProject: async (id, project) => {
         if (MOCK) { set(s => ({ projects: s.projects.map(p => p.id === id ? { ...p, ...project } : p) })); return; }
-        await updateDoc(doc(db, 'projects', id), project);
+        await api('PATCH', `/api/projects/${id}`, project);
+        set(s => ({ projects: s.projects.map(p => p.id === id ? { ...p, ...project } : p) }));
       },
       deleteProject: async (id) => {
         if (MOCK) { set(s => ({ projects: s.projects.filter(p => p.id !== id) })); return; }
-        await deleteDoc(doc(db, 'projects', id));
+        await api('DELETE', `/api/projects/${id}`);
+        set(s => ({ projects: s.projects.filter(p => p.id !== id) }));
       },
 
       addTask: async (task) => {
         const id = genId();
-        if (MOCK) { set(s => ({ tasks: [...s.tasks, { ...task, id }] })); return; }
-        const docRef = doc(collection(db, 'tasks'));
-        await setDoc(docRef, { ...task, id: docRef.id });
+        const newTask = { ...task, id };
+        if (MOCK) { set(s => ({ tasks: [...s.tasks, newTask] })); return; }
+        await api('POST', '/api/tasks', newTask);
+        set(s => ({ tasks: [...s.tasks, newTask] }));
       },
       updateTask: async (id, task) => {
         if (MOCK) { set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, ...task } : t) })); return; }
-        await updateDoc(doc(db, 'tasks', id), task);
+        await api('PATCH', `/api/tasks/${id}`, task);
+        set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, ...task } : t) }));
       },
       deleteTask: async (id) => {
         if (MOCK) { set(s => ({ tasks: s.tasks.filter(t => t.id !== id) })); return; }
-        await deleteDoc(doc(db, 'tasks', id));
+        await api('DELETE', `/api/tasks/${id}`);
+        set(s => ({ tasks: s.tasks.filter(t => t.id !== id) }));
       },
       updateTaskStatus: async (taskId, newStatus) => {
         if (MOCK) { set(s => ({ tasks: s.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t) })); return; }
-        await updateDoc(doc(db, 'tasks', taskId), { status: newStatus });
+        await api('PATCH', `/api/tasks/${taskId}`, { status: newStatus });
+        set(s => ({ tasks: s.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t) }));
       },
 
       addTransaction: async (tx) => {
         const id = genId();
-        if (MOCK) { set(s => ({ transactions: [...s.transactions, { ...tx, id }] })); return; }
-        const docRef = doc(collection(db, 'transactions'));
-        await setDoc(docRef, { ...tx, id: docRef.id });
+        const newTx = { ...tx, id };
+        if (MOCK) { set(s => ({ transactions: [...s.transactions, newTx] })); return; }
+        await api('POST', '/api/transactions', newTx);
+        set(s => ({ transactions: [...s.transactions, newTx] }));
       },
       updateTransaction: async (id, tx) => {
         if (MOCK) { set(s => ({ transactions: s.transactions.map(t => t.id === id ? { ...t, ...tx } : t) })); return; }
-        await updateDoc(doc(db, 'transactions', id), tx);
+        await api('PATCH', `/api/transactions/${id}`, tx);
+        set(s => ({ transactions: s.transactions.map(t => t.id === id ? { ...t, ...tx } : t) }));
       },
       deleteTransaction: async (id) => {
         if (MOCK) { set(s => ({ transactions: s.transactions.filter(t => t.id !== id) })); return; }
-        await deleteDoc(doc(db, 'transactions', id));
+        await api('DELETE', `/api/transactions/${id}`);
+        set(s => ({ transactions: s.transactions.filter(t => t.id !== id) }));
       },
 
       upsertBrandHub: async (hub) => {
         const id = hub.id ?? (hub.clientId ?? hub.projectId ?? crypto.randomUUID());
-        if (MOCK) { set(s => ({ brandhubs: [...s.brandhubs.filter(b => b.id !== id), { ...hub, id }] })); return; }
-        const docRef = doc(db, 'brandhubs', id);
-        await setDoc(docRef, { ...hub, id }, { merge: true });
+        const fullHub = { ...hub, id };
+        if (MOCK) { set(s => ({ brandhubs: [...s.brandhubs.filter(b => b.id !== id), fullHub] })); return; }
+        try {
+          await api('PATCH', `/api/brandhubs/${id}`, fullHub);
+        } catch {
+          await api('POST', '/api/brandhubs', fullHub);
+        }
+        set(s => ({ brandhubs: [...s.brandhubs.filter(b => b.id !== id), fullHub] }));
       },
       updateBrandHub: async (id, hub) => {
         if (MOCK) { set(s => ({ brandhubs: s.brandhubs.map(b => b.id === id ? { ...b, ...hub } : b) })); return; }
-        await updateDoc(doc(db, 'brandhubs', id), hub);
+        await api('PATCH', `/api/brandhubs/${id}`, hub);
+        set(s => ({ brandhubs: s.brandhubs.map(b => b.id === id ? { ...b, ...hub } : b) }));
       },
       deleteBrandHub: async (id) => {
         if (MOCK) { set(s => ({ brandhubs: s.brandhubs.filter(b => b.id !== id) })); return; }
-        await deleteDoc(doc(db, 'brandhubs', id));
+        await api('DELETE', `/api/brandhubs/${id}`);
+        set(s => ({ brandhubs: s.brandhubs.filter(b => b.id !== id) }));
       },
     }),
     {

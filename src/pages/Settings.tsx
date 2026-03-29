@@ -8,8 +8,6 @@ import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'motion/react';
 import { LabelTag } from '../components/LabelTag';
-import { db, auth } from '../lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { ManageLabelsModal } from '../components/modals/ManageLabelsModal';
 
 type Tab = 'profile' | 'visual' | 'permissions' | 'security' | 'notifications' | 'localization' | 'labels' | 'team';
@@ -53,31 +51,30 @@ export function Settings() {
 
   const fetchInvites = async () => {
     try {
-      const q = query(collection(db, 'invitations'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const fetchedInvites = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setInvites(fetchedInvites);
+      const res = await fetch('/api/invitations', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch invites');
+      setInvites(await res.json());
     } catch (error) {
-      console.error("Error fetching invites:", error);
-      toast.error("Erro ao carregar convites.");
+      console.error('Error fetching invites:', error);
+      toast.error('Erro ao carregar convites.');
     }
   };
 
   const handleGenerateInvite = async (role: 'socio' | 'seeder') => {
-    if (!auth.currentUser) return;
     setIsGeneratingInvite(true);
     try {
-      await addDoc(collection(db, 'invitations'), {
-        role,
-        used: false,
-        createdBy: auth.currentUser.uid,
-        createdAt: new Date().toISOString()
+      const res = await fetch('/api/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+        credentials: 'include',
       });
+      if (!res.ok) throw new Error('Failed to generate invite');
       toast.success(`Convite para ${role} gerado com sucesso!`);
       fetchInvites();
     } catch (error) {
-      console.error("Error generating invite:", error);
-      toast.error("Erro ao gerar convite.");
+      console.error('Error generating invite:', error);
+      toast.error('Erro ao gerar convite.');
     } finally {
       setIsGeneratingInvite(false);
     }

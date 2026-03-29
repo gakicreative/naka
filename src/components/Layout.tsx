@@ -6,8 +6,6 @@ import { cn } from '../lib/utils';
 import { useApp } from './AppProvider';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
-import { auth } from '../lib/firebase';
-import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationPanel } from './NotificationPanel';
 
@@ -45,11 +43,12 @@ export function Layout() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      setSession(null);
-      navigate('/login');
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setSession(null);
+      navigate('/login');
     }
   };
 

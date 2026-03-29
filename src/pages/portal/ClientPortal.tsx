@@ -5,8 +5,6 @@ import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
 import { RequestTaskModal } from '../../components/modals/RequestTaskModal';
 
 type PortalTab = 'brand' | 'tasks' | 'deliverables';
@@ -41,11 +39,12 @@ export function ClientPortal() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      setSession(null);
-      navigate('/login');
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setSession(null);
+      navigate('/login');
     }
   };
 
