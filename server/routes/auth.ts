@@ -3,13 +3,6 @@ import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { db, users, invitations, pool } from '../db.js';
 import { requireAuth, setToken, clearToken, type AuthRequest } from '../auth.js';
-import passport from 'passport';
-
-declare module 'express-session' {
-  interface SessionData {
-    oauthInviteId?: string;
-  }
-}
 
 const router = Router();
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@naka.app';
@@ -22,6 +15,7 @@ router.post('/login', async (req, res) => {
 
     const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase().trim()));
     if (!user) return res.status(401).json({ error: 'Email ou senha incorretos' });
+    if (!user.passwordHash) return res.status(401).json({ error: 'Esta conta usa login com Google. Use o botão "Entrar com Google".' });
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ error: 'Email ou senha incorretos' });
@@ -45,16 +39,13 @@ router.post('/register', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user already exists
     const [existing] = await db.select().from(users).where(eq(users.email, normalizedEmail));
     if (existing) return res.status(409).json({ error: 'Email já cadastrado' });
 
-    // Check if this is the first user (auto-admin) or has invite
     const { rows: [{ count }] } = await pool.query('SELECT COUNT(*) FROM users');
     let role: string = 'cliente';
 
     if (parseInt(count) === 0) {
-      // First user is always admin
       role = 'admin';
     } else if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
       role = 'admin';
@@ -62,7 +53,6 @@ router.post('/register', async (req, res) => {
       const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
       if (!invite || invite.used) return res.status(400).json({ error: 'Convite inválido ou já utilizado' });
       role = invite.role;
-      // Mark invite as used
       await db.update(invitations)
         .set({ used: true, usedBy: normalizedEmail, usedAt: new Date().toISOString() })
         .where(eq(invitations.id, inviteId));
@@ -81,52 +71,155 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ── POST /api/auth/logout ──────────────────────────────────────────────────
+// ── POST /api/auth/logout ────────────────────────────────────────────────────
 router.post('/logout', (_req, res) => {
   clearToken(res);
   res.json({ ok: true });
 });
 
-// ── GET /api/auth/google?invite=<id> ───────────────────────────────────
-router.get('/google', (req, res, next) => {
-  // Salva inviteId na session para usar depois no callback
-  if (req.query.invite) {
-    req.session.oauthInviteId = req.query.invite as string;
-  } else {
-    delete req.session.oauthInviteId;
+// ── GET /api/auth/google ──────────────────────────────────────────────────────
+// Redireciona para o Google OAuth manualmente (sem Passport)
+router.get('/google', (req, res) => {
+  const clientId     = process.env.GOOGLE_CLIENT_ID;
+  const callbackUrl  = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
+  const inviteId     = (req.query.invite as string) || '';
+
+  console.log('[Google OAuth] Iniciando redirect');
+  console.log('[Google OAuth] CLIENT_ID:', clientId ? `${clientId.slice(0, 20)}...` : 'NÃO DEFINIDO');
+  console.log('[Google OAuth] CALLBACK_URL:', callbackUrl);
+  console.log('[Google OAuth] inviteId:', inviteId || 'nenhum');
+
+  if (!clientId) {
+    console.error('[Google OAuth] GOOGLE_CLIENT_ID não está definido!');
+    return res.redirect('/login?error=oauth_not_configured');
   }
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account',
-  })(req, res, next);
+
+  // Usa o state para transportar inviteId (padrão OAuth2 correto)
+  const state = inviteId ? Buffer.from(JSON.stringify({ inviteId })).toString('base64url') : 'login';
+
+  const params = new URLSearchParams({
+    client_id:     clientId,
+    redirect_uri:  callbackUrl,
+    response_type: 'code',
+    scope:         'openid profile email',
+    prompt:        'select_account',
+    state,
+  });
+
+  const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  console.log('[Google OAuth] Redirecionando para Google');
+  res.redirect(googleUrl);
 });
 
-// ── GET /api/auth/google/callback ───────────────────────────────────
-// Usa custom callback para tratar erros corretamente (error handler inline
-// exige 4 parâmetros que TypeScript não aceita facilmente via Router).
-router.get('/google/callback', (req, res, next) => {
-  passport.authenticate('google', { session: false }, (err: Error | null, user: { id: string; role: string; name: string; email: string; activeClientId?: string } | false) => {
-    if (err) {
-      console.error('Google OAuth error:', err);
-      const msg = (err as { message?: string })?.message || '';
-      if (msg === 'invite_required' || msg === 'invite_invalid') {
-        return res.redirect(`/login?error=${msg}`);
-      }
+// ── GET /api/auth/google/callback ────────────────────────────────────────────
+// Recebe o código do Google e troca por tokens manualmente
+router.get('/google/callback', async (req, res) => {
+  try {
+    const code      = req.query.code as string;
+    const stateRaw  = req.query.state as string;
+    const error     = req.query.error as string;
+
+    console.log('[Google Callback] code:', code ? 'recebido' : 'AUSENTE');
+    console.log('[Google Callback] state:', stateRaw);
+    console.log('[Google Callback] error do Google:', error || 'nenhum');
+
+    if (error) {
+      console.error('[Google Callback] Google retornou erro:', error);
       return res.redirect('/login?error=oauth_failed');
     }
 
-    if (!user) {
+    if (!code) {
       return res.redirect('/login?error=oauth_failed');
     }
 
-    // Limpa o inviteId da session
-    delete req.session.oauthInviteId;
+    const clientId     = process.env.GOOGLE_CLIENT_ID!;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const callbackUrl  = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
 
-    setToken(res, user.id, user.role);
+    // Troca o código por tokens
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id:     clientId,
+        client_secret: clientSecret,
+        redirect_uri:  callbackUrl,
+        grant_type:    'authorization_code',
+      }),
+    });
 
-    const redirect = user.role === 'cliente' ? '/portal' : '/';
-    res.redirect(redirect);
-  })(req, res, next);
+    const tokens = await tokenRes.json() as { access_token?: string; error?: string };
+    console.log('[Google Callback] Token troca status:', tokenRes.status);
+
+    if (!tokens.access_token) {
+      console.error('[Google Callback] Token inválido:', tokens);
+      return res.redirect('/login?error=oauth_failed');
+    }
+
+    // Busca perfil do usuário
+    const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+    const profile = await profileRes.json() as { id: string; email: string; name: string };
+    console.log('[Google Callback] Profile email:', profile.email);
+
+    const googleId = profile.id;
+    const email    = (profile.email || '').toLowerCase().trim();
+    const name     = profile.name || email.split('@')[0];
+
+    // Extrai inviteId do state
+    let inviteId: string | undefined;
+    if (stateRaw && stateRaw !== 'login') {
+      try {
+        const decoded = JSON.parse(Buffer.from(stateRaw, 'base64url').toString());
+        inviteId = decoded.inviteId;
+      } catch { /* state inválido, ignora */ }
+    }
+
+    // 1. Usuário existente por google_id
+    const [byGoogleId] = await db.select().from(users).where(eq(users.googleId, googleId));
+    if (byGoogleId) {
+      console.log('[Google Callback] Login por google_id:', email);
+      setToken(res, byGoogleId.id, byGoogleId.role);
+      return res.redirect(byGoogleId.role === 'cliente' ? '/portal' : '/');
+    }
+
+    // 2. Usuário existente pelo email (vincula google_id)
+    const [byEmail] = await db.select().from(users).where(eq(users.email, email));
+    if (byEmail) {
+      console.log('[Google Callback] Vinculando google_id ao usuário existente:', email);
+      await db.update(users).set({ googleId }).where(eq(users.id, byEmail.id));
+      setToken(res, byEmail.id, byEmail.role);
+      return res.redirect(byEmail.role === 'cliente' ? '/portal' : '/');
+    }
+
+    // 3. Novo usuário — precisa de convite
+    console.log('[Google Callback] Novo usuário. inviteId:', inviteId || 'NENHUM');
+    if (!inviteId) {
+      return res.redirect('/login?error=invite_required');
+    }
+
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
+    if (!invite || invite.used) {
+      return res.redirect('/login?error=invite_invalid');
+    }
+
+    const id   = crypto.randomUUID();
+    const role = invite.role;
+    await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
+    await db.update(invitations)
+      .set({ used: true, usedBy: email, usedAt: new Date().toISOString() })
+      .where(eq(invitations.id, inviteId));
+
+    console.log('[Google Callback] Novo usuário criado:', email, 'role:', role);
+    setToken(res, id, role);
+    return res.redirect(role === 'cliente' ? '/portal' : '/');
+
+  } catch (err) {
+    console.error('[Google Callback] Erro inesperado:', err);
+    return res.redirect('/login?error=oauth_failed');
+  }
 });
 
 // ── GET /api/auth/me ─────────────────────────────────────────────────────────

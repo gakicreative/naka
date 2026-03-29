@@ -1,11 +1,8 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDb } from './db.js';
-import './google-strategy.js'; // registra a strategy do Google
-import passport from 'passport';
 import authRouter from './routes/auth.js';
 import entitiesRouter from './routes/entities.js';
 import invitationsRouter from './routes/invitations.js';
@@ -21,22 +18,6 @@ const app = express();
 app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
 
-// Session — usada APENAS para transportar o inviteId durante o fluxo OAuth
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'naka-session-secret-dev',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 10 * 60 * 1000, // 10 minutos — só para o fluxo OAuth
-  },
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 // ── Static files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static(UPLOAD_DIR));
 
@@ -44,21 +25,19 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/api/auth',        authRouter);
 app.use('/api/invitations', invitationsRouter);
 app.use('/api/upload',      uploadsRouter);
-app.use('/api',             entitiesRouter);  // /api/clients, /api/tasks, etc.
+app.use('/api',             entitiesRouter);
 
-// ── Error handler global (evita tela preta em erros do Express) ────────────
+// ── Error handler global ─────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('[Server Error]', err.message, err.stack);
-  // Se for requisição de API, retorna JSON
-  if (req.path.startsWith('/api')) {
-    return res.status(500).json({ error: err.message || 'Erro interno do servidor' });
-  }
-  // Para rotas OAuth, redireciona para login com mensagem
+  console.error('[Server Error]', req.method, req.path, err.message);
   if (req.path.includes('/google')) {
     return res.redirect('/login?error=oauth_failed');
   }
-  res.status(500).send(`<h1>Erro interno</h1><pre>${err.message}</pre>`);
+  if (req.path.startsWith('/api')) {
+    return res.status(500).json({ error: err.message || 'Erro interno' });
+  }
+  res.status(500).send(`<h1>Erro</h1><pre>${err.message}</pre>`);
 });
 
 // ── Serve React SPA ───────────────────────────────────────────────────────────
@@ -75,6 +54,8 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 initDb()
   .then(() => {
+    console.log('Google OAuth CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ definido' : '❌ NÃO DEFINIDO');
+    console.log('Google OAuth CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL || '⚠️ usando localhost padrão');
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Naka OS server running on port ${PORT}`);
     });
