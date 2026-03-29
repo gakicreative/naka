@@ -46,6 +46,21 @@ app.use('/api/invitations', invitationsRouter);
 app.use('/api/upload',      uploadsRouter);
 app.use('/api',             entitiesRouter);  // /api/clients, /api/tasks, etc.
 
+// ── Error handler global (evita tela preta em erros do Express) ────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[Server Error]', err.message, err.stack);
+  // Se for requisição de API, retorna JSON
+  if (req.path.startsWith('/api')) {
+    return res.status(500).json({ error: err.message || 'Erro interno do servidor' });
+  }
+  // Para rotas OAuth, redireciona para login com mensagem
+  if (req.path.includes('/google')) {
+    return res.redirect('/login?error=oauth_failed');
+  }
+  res.status(500).send(`<h1>Erro interno</h1><pre>${err.message}</pre>`);
+});
+
 // ── Serve React SPA ───────────────────────────────────────────────────────────
 app.use(express.static(DIST_DIR));
 app.get('*', (_req, res) => {
