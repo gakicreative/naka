@@ -156,18 +156,32 @@ router.get('/google/callback', async (c) => {
       return c.redirect(byEmail.role === 'cliente' ? '/portal' : '/');
     }
 
-    // 3. Novo usuário → precisa de convite
-    if (!inviteId) return c.redirect('/login?error=invite_required');
+    // 3. Novo usuário — verifica se é o admin ou se tem convite
+    const ADMIN_EMAIL = (c.env.ADMIN_EMAIL || 'admin@naka.app').toLowerCase();
+    const isAdminEmail = email === ADMIN_EMAIL;
 
-    const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
-    if (!invite || invite.used) return c.redirect('/login?error=invite_invalid');
+    // Conta usuários: primeiro cadastro vira admin automaticamente
+    const countResult = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
+    const isFirstUser = (countResult?.count ?? 0) === 0;
 
-    const id   = crypto.randomUUID();
-    const role = invite.role;
-    await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
-    await db.update(invitations)
-      .set({ used: true, usedBy: email, usedAt: new Date().toISOString() })
-      .where(eq(invitations.id, inviteId));
+    let id   = crypto.randomUUID();
+    let role = 'cliente';
+
+    if (isFirstUser || isAdminEmail) {
+      // Admin não precisa de convite
+      role = 'admin';
+      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
+    } else {
+      // Usuário comum → precisa de convite
+      if (!inviteId) return c.redirect('/login?error=invite_required');
+      const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
+      if (!invite || invite.used) return c.redirect('/login?error=invite_invalid');
+      role = invite.role;
+      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
+      await db.update(invitations)
+        .set({ used: true, usedBy: email, usedAt: new Date().toISOString() })
+        .where(eq(invitations.id, inviteId));
+    }
 
     await setToken(c, id, role);
     return c.redirect(role === 'cliente' ? '/portal' : '/');
