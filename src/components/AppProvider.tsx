@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import {
   MOCK_SESSION, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
   MOCK_LABELS, MOCK_TRANSACTIONS, MOCK_NOTIFICATIONS, MOCK_BRANDHUBS,
+  MOCK_TEAM_USERS, MOCK_FEEDBACKS,
 } from '../lib/mockData';
 
 const MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
@@ -34,6 +35,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setPins = useStore((s) => s.setPins);
   const setLabels = useStore((s) => s.setLabels);
   const setNotifications = useStore((s) => s.setNotifications);
+  const setFeedbacks = useStore((s) => s.setFeedbacks);
+  const setTeamUsers = useStore((s) => s.setTeamUsers);
   const setSession = useStore((s) => s.setSession);
 
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -60,6 +63,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications(MOCK_NOTIFICATIONS);
     setBrandHubs(MOCK_BRANDHUBS);
     setPins([]);
+    setFeedbacks(MOCK_FEEDBACKS);
+    setTeamUsers(MOCK_TEAM_USERS);
     setUserName(MOCK_SESSION.name);
     setIsAuthReady(true);
   }, []);
@@ -86,9 +91,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
         setUserName(u.name);
 
+        const isAdmin = u.role === 'admin';
+
         const [
           clients, projects, tasks, transactions,
-          brandhubs, pins, labels, notifications,
+          brandhubs, pins, labels, notifications, feedbacks,
+          teamUsersRes,
         ] = await Promise.all([
           fetch('/api/clients',       { credentials: 'include' }).then(r => r.json()),
           fetch('/api/projects',      { credentials: 'include' }).then(r => r.json()),
@@ -98,6 +106,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           fetch('/api/pins',          { credentials: 'include' }).then(r => r.json()),
           fetch('/api/labels',        { credentials: 'include' }).then(r => r.json()),
           fetch('/api/notifications', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/feedbacks',     { credentials: 'include' }).then(r => r.json()),
+          isAdmin ? fetch('/api/team', { credentials: 'include' }).then(r => r.json()) : Promise.resolve([]),
         ]);
 
         setClients(Array.isArray(clients) ? clients : []);
@@ -108,6 +118,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setPins(Array.isArray(pins) ? pins : []);
         setLabels(Array.isArray(labels) ? labels : []);
         setNotifications(Array.isArray(notifications) ? notifications : []);
+        setFeedbacks(Array.isArray(feedbacks) ? feedbacks : []);
+        setTeamUsers(Array.isArray(teamUsersRes) ? teamUsersRes : []);
       } catch (err) {
         console.error('Init error:', err);
         setSession(null);

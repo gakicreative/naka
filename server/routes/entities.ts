@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { eq } from 'drizzle-orm';
-import { db, clients, projects, tasks, transactions, brandhubs, pins, labels, notifications } from '../db.js';
+import { db, clients, projects, tasks, transactions, brandhubs, pins, labels, notifications, feedbacks } from '../db.js';
 import { requireAuth } from '../auth.js';
 
 const router = Router();
@@ -9,7 +9,7 @@ router.use(requireAuth);
 // Map collection name → drizzle table
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TABLES: Record<string, any> = {
-  clients, projects, tasks, transactions, brandhubs, pins, labels, notifications,
+  clients, projects, tasks, transactions, brandhubs, pins, labels, notifications, feedbacks,
 };
 
 // ── GET /api/:collection ─────────────────────────────────────────────────────

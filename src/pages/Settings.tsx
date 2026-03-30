@@ -53,7 +53,7 @@ export function Settings() {
     }
   };
 
-  const handleGenerateInvite = async (role: 'socio' | 'seeder') => {
+  const handleGenerateInvite = async (role: 'socio' | 'lider' | 'seeder') => {
     setIsGeneratingInvite(true);
     try {
       const res = await fetch('/api/invitations', {
@@ -164,7 +164,7 @@ export function Settings() {
                     Gere convites para adicionar sócios ou seeders à plataforma.
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleGenerateInvite('socio')}
                     disabled={isGeneratingInvite}
@@ -172,6 +172,14 @@ export function Settings() {
                   >
                     <Plus className="w-4 h-4" />
                     {t('settings.team.newPartner')}
+                  </button>
+                  <button
+                    onClick={() => handleGenerateInvite('lider')}
+                    disabled={isGeneratingInvite}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    + Líder
                   </button>
                   <button
                     onClick={() => handleGenerateInvite('seeder')}

@@ -11,7 +11,8 @@ const resources = {
         brandHub: 'Brand Hub',
         finances: 'Finanças',
         projects: 'Projetos',
-        settings: 'Configurações'
+        settings: 'Configurações',
+        team: 'Equipe'
       },
       common: {
         save: 'Salvar',
@@ -32,6 +33,7 @@ const resources = {
         roles: {
           admin: 'Admin',
           socio: 'Sócio',
+          lider: 'Líder',
           seeder: 'Funcionário',
           cliente: 'Cliente'
         }
@@ -206,7 +208,7 @@ const resources = {
         subtitle: 'Veja o que está agendado para o dia',
         todayCount: 'hoje',
         urgentCount: 'urgentes',
-        viewKanban: 'Ver Kanban',
+        viewTasks: 'Ver Tarefas',
         searchPlaceholder: 'Buscar cliente...',
         noTasksToday: 'Nenhuma tarefa para hoje. Aproveite!',
         tasksLabel: 'tarefa(s)'
@@ -262,6 +264,13 @@ const resources = {
           inProgress: 'Em Produção',
           review: 'Aprovação',
           done: 'Concluído'
+        },
+        feedback: {
+          prompt: 'Como foi essa entrega?',
+          placeholder: 'Deixe um comentário opcional...',
+          submit: 'Enviar Avaliação',
+          submitted: 'Obrigado pelo feedback!',
+          alreadyDone: 'Avaliação enviada'
         }
       },
       requestTask: {
@@ -308,6 +317,34 @@ const resources = {
           date: 'Data',
           status: 'Status'
         }
+      },
+      team: {
+        title: 'Equipe & Saúde',
+        tabTeam: 'Equipe',
+        tabHealth: 'Saúde dos Clientes',
+        activeTasks: 'Tarefas ativas',
+        doneTasks: 'Concluídas este mês',
+        lateTasks: 'Atrasadas',
+        completionRate: 'Taxa de conclusão',
+        noTasks: 'Nenhuma tarefa atribuída',
+        healthTitle: 'Saúde dos Clientes',
+        avgRating: 'Média do mês',
+        noFeedbacks: 'Sem feedbacks ainda',
+        addFeedback: 'Registrar Feedback',
+        editFeedback: 'Editar Feedback',
+        history: 'Histórico',
+        noMembers: 'Nenhum membro na equipe ainda.'
+      },
+      feedback: {
+        title: 'Registrar Feedback',
+        editTitle: 'Editar Feedback',
+        monthLabel: 'Mês de referência',
+        ratingLabel: 'Avaliação',
+        noteLabel: 'Observação',
+        notePlaceholder: 'Alguma observação sobre este mês...',
+        save: 'Salvar Feedback',
+        saved: 'Feedback salvo com sucesso!',
+        errorSave: 'Erro ao salvar feedback'
       },
       brandhub: {
         title: 'Brand Hub',
@@ -531,7 +568,7 @@ const resources = {
         subtitle: 'See what is scheduled for today',
         todayCount: 'today',
         urgentCount: 'urgent',
-        viewKanban: 'View Kanban',
+        viewTasks: 'View Tasks',
         searchPlaceholder: 'Search client...',
         noTasksToday: 'No tasks for today. Enjoy!',
         tasksLabel: 'task(s)'
@@ -633,6 +670,34 @@ const resources = {
           date: 'Date',
           status: 'Status'
         }
+      },
+      team: {
+        title: 'Team & Health',
+        tabTeam: 'Team',
+        tabHealth: 'Client Health',
+        activeTasks: 'Active tasks',
+        doneTasks: 'Done this month',
+        lateTasks: 'Overdue',
+        completionRate: 'Completion rate',
+        noTasks: 'No tasks assigned',
+        healthTitle: 'Client Health',
+        avgRating: 'Month average',
+        noFeedbacks: 'No feedbacks yet',
+        addFeedback: 'Register Feedback',
+        editFeedback: 'Edit Feedback',
+        history: 'History',
+        noMembers: 'No team members yet.'
+      },
+      feedback: {
+        title: 'Register Feedback',
+        editTitle: 'Edit Feedback',
+        monthLabel: 'Reference month',
+        ratingLabel: 'Rating',
+        noteLabel: 'Note',
+        notePlaceholder: 'Any notes about this month...',
+        save: 'Save Feedback',
+        saved: 'Feedback saved successfully!',
+        errorSave: 'Error saving feedback'
       },
       brandhub: {
         title: 'Brand Hub',

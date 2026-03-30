@@ -28,6 +28,7 @@ export const users = pgTable('users', {
   googleId:      text('google_id'),               // null para usuários com senha
   role:          text('role').notNull().default('cliente'),
   activeClientId: text('active_client_id'),
+  leaderId:      text('leader_id'),
   createdAt:     timestamp('created_at').defaultNow(),
 });
 
@@ -51,6 +52,7 @@ export const brandhubs     = pgTable('brandhubs',     { id: text('id').primaryKe
 export const pins          = pgTable('pins',          { id: text('id').primaryKey(), payload: jsonb('payload').notNull() });
 export const labels        = pgTable('labels',        { id: text('id').primaryKey(), payload: jsonb('payload').notNull() });
 export const notifications = pgTable('notifications', { id: text('id').primaryKey(), payload: jsonb('payload').notNull() });
+export const feedbacks     = pgTable('feedbacks',     { id: text('id').primaryKey(), payload: jsonb('payload').notNull() });
 
 // ── DB Init (create tables if they don't exist) ────────────────────────────────
 export async function initDb() {
@@ -68,6 +70,7 @@ export async function initDb() {
       );
       ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id TEXT;
       ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS leader_id TEXT;
       CREATE TABLE IF NOT EXISTS invitations (
         id         TEXT PRIMARY KEY,
         role       TEXT NOT NULL,
@@ -85,6 +88,7 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS pins          (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
       CREATE TABLE IF NOT EXISTS labels        (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
       CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
+      CREATE TABLE IF NOT EXISTS feedbacks     (id TEXT PRIMARY KEY, payload JSONB NOT NULL);
     `);
     console.log('✅ DB tables ready');
   } catch (error) {

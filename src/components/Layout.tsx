@@ -17,13 +17,14 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { iconName: 'solar:home-2-linear',                 labelKey: 'nav.home',      path: '/',          roles: ['admin', 'socio', 'seeder'] },
-  { iconName: 'solar:users-group-rounded-linear',    labelKey: 'nav.clients',   path: '/clients',   roles: ['admin', 'socio', 'seeder'] },
-  { iconName: 'solar:checklist-minimalistic-linear', labelKey: 'nav.tasks',     path: '/tasks',     roles: ['admin', 'socio', 'seeder'] },
-  { iconName: 'solar:palette-linear',                labelKey: 'nav.brandHub',  path: '/brand-hub', roles: ['admin', 'socio', 'seeder'] },
+  { iconName: 'solar:home-2-linear',                 labelKey: 'nav.home',      path: '/',          roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:users-group-rounded-linear',    labelKey: 'nav.clients',   path: '/clients',   roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:checklist-minimalistic-linear', labelKey: 'nav.tasks',     path: '/tasks',     roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:palette-linear',                labelKey: 'nav.brandHub',  path: '/brand-hub', roles: ['admin', 'socio', 'lider', 'seeder'] },
   { iconName: 'solar:wallet-linear',                 labelKey: 'nav.finances',  path: '/finances',  roles: ['admin'] },
-  { iconName: 'solar:folder-linear',                 labelKey: 'nav.projects',  path: '/projects',  roles: ['admin', 'socio', 'seeder'] },
-  { iconName: 'solar:settings-linear',               labelKey: 'nav.settings',  path: '/settings',  roles: ['admin', 'socio', 'seeder'] },
+  { iconName: 'solar:chart-linear',                  labelKey: 'nav.team',      path: '/team',      roles: ['admin'] },
+  { iconName: 'solar:folder-linear',                 labelKey: 'nav.projects',  path: '/projects',  roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:settings-linear',               labelKey: 'nav.settings',  path: '/settings',  roles: ['admin', 'socio', 'lider', 'seeder'] },
 ];
 
 
@@ -39,7 +40,7 @@ export function Layout() {
   const session = useStore((s) => s.session);
   const setSession = useStore((s) => s.setSession);
 
-  const visibleNav = navItems.filter((item) => item.roles.includes(session.role));
+  const visibleNav = navItems.filter((item) => item.roles.includes(session.role as never));
 
   const handleLogout = async () => {
     try {

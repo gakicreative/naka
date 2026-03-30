@@ -874,7 +874,7 @@ function ClientKanbanTab({ clientId }: { clientId: string }) {
         to={`/clients/${clientId}/tasks`}
         className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors"
       >
-        <Kanban className="w-4 h-4" /> Abrir Kanban completo
+        Ver todas as tarefas
       </Link>
     </div>
   );

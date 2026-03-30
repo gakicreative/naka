@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { SwatchBook, CheckSquare, Package, LogOut, Plus } from 'lucide-react';
+import { SwatchBook, CheckSquare, Package, LogOut, Plus, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { RequestTaskModal } from '../../components/modals/RequestTaskModal';
+import { toast } from 'sonner';
 
 type PortalTab = 'brand' | 'tasks' | 'deliverables';
 
@@ -19,8 +20,35 @@ export function ClientPortal() {
   const tasks = useStore((s) => s.tasks);
   const clients = useStore((s) => s.clients);
 
+  const feedbacks = useStore((s) => s.feedbacks);
+  const addFeedback = useStore((s) => s.addFeedback);
+
   const [activeTab, setActiveTab] = useState<PortalTab>('tasks');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [pendingRatings, setPendingRatings] = useState<Record<string, number>>({});
+  const [pendingComments, setPendingComments] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
+
+  const hasFeedback = (taskId: string) => feedbacks.some(f => f.taskId === taskId);
+
+  const handleSubmitFeedback = async (taskId: string) => {
+    const rating = pendingRatings[taskId];
+    if (!rating) { toast.error('Selecione uma avaliação.'); return; }
+    setSubmitting(s => ({ ...s, [taskId]: true }));
+    try {
+      await addFeedback({
+        taskId,
+        clientId: session?.activeClientId || '',
+        rating,
+        comment: pendingComments[taskId] || '',
+      });
+      toast.success(t('portal.feedback.submitted'));
+    } catch {
+      toast.error('Erro ao enviar feedback.');
+    } finally {
+      setSubmitting(s => ({ ...s, [taskId]: false }));
+    }
+  };
 
   const client = clients.find((c) => c.id === session?.activeClientId);
 
@@ -286,29 +314,91 @@ export function ClientPortal() {
                   animate="show"
                   className="space-y-3"
                 >
-                  {clientTasks.map((task) => (
+                  {clientTasks.map((task) => {
+                    const isDone = task.status === 'done';
+                    const rated = hasFeedback(task.id);
+                    const existingFeedback = feedbacks.find(f => f.taskId === task.id);
+                    const hoveredStar = pendingRatings[`hover_${task.id}`] || 0;
+                    const selectedStar = pendingRatings[task.id] || 0;
+                    const displayStar = hoveredStar || selectedStar;
+
+                    return (
                     <motion.div
                       variants={item}
                       key={task.id}
-                      className="bg-surface-container-low rounded-2xl p-5 border border-surface-container-high flex items-center justify-between gap-4"
+                      className={cn(
+                        "bg-surface-container-low rounded-2xl p-5 border transition-colors",
+                        isDone && !rated ? "border-primary/30" : "border-surface-container-high"
+                      )}
                     >
-                      <div className="space-y-1">
-                      <p className="text-base font-medium text-on-surface">{task.title}</p>
-                      {task.description && (
-                        <p className="text-sm text-on-surface-variant line-clamp-1">{task.description}</p>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <p className="text-base font-medium text-on-surface">{task.title}</p>
+                          {task.description && (
+                            <p className="text-sm text-on-surface-variant line-clamp-1">{task.description}</p>
+                          )}
+                          {task.dueDate && (
+                            <p className="text-xs text-on-surface-variant mt-1">{t('portal.deadline', { date: task.dueDate })}</p>
+                          )}
+                        </div>
+                        <span className={cn('text-xs px-3 py-1.5 rounded-full font-medium flex-shrink-0', statusColors[task.status] ?? statusColors['todo'])}>
+                          {task.status === 'todo' && t('portal.status.todo')}
+                          {task.status === 'in-progress' && t('portal.status.inProgress')}
+                          {task.status === 'review' && t('portal.status.review')}
+                          {task.status === 'done' && t('portal.status.done')}
+                        </span>
+                      </div>
+
+                      {/* Feedback inline — só para tarefas concluídas */}
+                      {isDone && (
+                        <div className={cn(
+                          "mt-4 pt-4 border-t border-surface-container-high",
+                        )}>
+                          {rated ? (
+                            <div className="flex items-center gap-2">
+                              <div className="flex gap-0.5">
+                                {[1,2,3,4,5].map(s => (
+                                  <Star key={s} className={cn('w-4 h-4', s <= (existingFeedback?.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-on-surface-variant/20 fill-on-surface-variant/20')} />
+                                ))}
+                              </div>
+                              <span className="text-xs text-emerald-400 font-medium">{t('portal.feedback.alreadyDone')}</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <p className="text-sm font-medium text-on-surface">{t('portal.feedback.prompt')}</p>
+                              <div className="flex gap-1">
+                                {[1,2,3,4,5].map(s => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setPendingRatings(r => ({ ...r, [task.id]: s }))}
+                                    onMouseEnter={() => setPendingRatings(r => ({ ...r, [`hover_${task.id}`]: s }))}
+                                    onMouseLeave={() => setPendingRatings(r => ({ ...r, [`hover_${task.id}`]: 0 }))}
+                                    className="p-0.5 transition-transform hover:scale-110"
+                                  >
+                                    <Star className={cn('w-6 h-6 transition-colors', s <= displayStar ? 'text-yellow-400 fill-yellow-400' : 'text-on-surface-variant/30')} />
+                                  </button>
+                                ))}
+                              </div>
+                              <textarea
+                                value={pendingComments[task.id] || ''}
+                                onChange={e => setPendingComments(c => ({ ...c, [task.id]: e.target.value }))}
+                                placeholder={t('portal.feedback.placeholder')}
+                                className="w-full px-3 py-2 rounded-xl bg-surface-container border border-surface-container-high text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 resize-none min-h-[60px]"
+                              />
+                              <button
+                                onClick={() => handleSubmitFeedback(task.id)}
+                                disabled={!selectedStar || submitting[task.id]}
+                                className="px-4 py-1.5 bg-primary text-on-primary text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-40"
+                              >
+                                {submitting[task.id] ? '...' : t('portal.feedback.submit')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       )}
-                      {task.dueDate && (
-                        <p className="text-xs text-on-surface-variant mt-1">{t('portal.deadline', { date: task.dueDate })}</p>
-                      )}
-                    </div>
-                    <span className={cn('text-xs px-3 py-1.5 rounded-full font-medium flex-shrink-0', statusColors[task.status] ?? statusColors['todo'])}>
-                      {task.status === 'todo' && t('portal.status.todo')}
-                      {task.status === 'in-progress' && t('portal.status.inProgress')}
-                      {task.status === 'review' && t('portal.status.review')}
-                      {task.status === 'done' && t('portal.status.done')}
-                    </span>
                     </motion.div>
-                  ))}
+                  );})}
                 </motion.div>
               )}
             </div>

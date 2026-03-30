@@ -18,6 +18,7 @@ import { BrandHubDetail } from './pages/BrandHubDetail';
 import { ClientDetail } from './pages/ClientDetail';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Finances } from './pages/Finances';
+import { Team } from './pages/Team';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ClientPortal } from './pages/portal/ClientPortal';
@@ -58,7 +59,7 @@ export default function App() {
             <Route
               path="clients"
               element={
-                <RoleGuard allow={['admin', 'socio', 'seeder']}>
+                <RoleGuard allow={['admin', 'socio', 'lider', 'seeder']}>
                   <Clients />
                 </RoleGuard>
               }
@@ -66,7 +67,7 @@ export default function App() {
             <Route
               path="clients/:clientId"
               element={
-                <RoleGuard allow={['admin', 'socio', 'seeder']}>
+                <RoleGuard allow={['admin', 'socio', 'lider', 'seeder']}>
                   <ClientDetail />
                 </RoleGuard>
               }
@@ -74,7 +75,7 @@ export default function App() {
             <Route
               path="clients/:clientId/tasks"
               element={
-                <RoleGuard allow={['admin', 'socio', 'seeder']}>
+                <RoleGuard allow={['admin', 'socio', 'lider', 'seeder']}>
                   <KanbanBoard />
                 </RoleGuard>
               }
@@ -92,6 +93,14 @@ export default function App() {
               element={
                 <RoleGuard allow={['admin']}>
                   <Finances />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="team"
+              element={
+                <RoleGuard allow={['admin']}>
+                  <Team />
                 </RoleGuard>
               }
             />

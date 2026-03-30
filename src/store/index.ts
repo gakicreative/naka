@@ -13,7 +13,7 @@ async function api(method: string, path: string, body?: unknown) {
 }
 
 export interface UserSession {
-  role: 'admin' | 'socio' | 'seeder' | 'cliente';
+  role: 'admin' | 'socio' | 'lider' | 'seeder' | 'cliente';
   name: string;
   email?: string;
   activeClientId?: string;
@@ -296,6 +296,24 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface Feedback {
+  id: string;
+  taskId: string;
+  clientId: string;
+  rating: number;   // 1–5
+  comment?: string;
+  createdAt: string;
+}
+
+export interface TeamUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'socio' | 'lider' | 'seeder';
+  leaderId?: string;
+  createdAt?: string;
+}
+
 const genId = () => crypto.randomUUID();
 const MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
@@ -358,6 +376,20 @@ interface AppState {
   deleteLabel: (id: string) => void;
   setLabels: (labels: TaskLabel[]) => void;
 
+  // Feedbacks (enviados pelos clientes sobre tarefas concluídas)
+  feedbacks: Feedback[];
+  setFeedbacks: (feedbacks: Feedback[]) => void;
+  addFeedback: (feedback: Omit<Feedback, 'id' | 'createdAt'>) => Promise<void>;
+  updateFeedback: (id: string, data: Partial<Feedback>) => Promise<void>;
+  deleteFeedback: (id: string) => Promise<void>;
+
+  // Team users: atualizar leaderId
+  updateTeamUser: (id: string, leaderId: string | null) => Promise<void>;
+
+  // Team users (read-only from server)
+  teamUsers: TeamUser[];
+  setTeamUsers: (users: TeamUser[]) => void;
+
   // Bulk setters (used by AppProvider seed)
   setPins: (pins: Pin[]) => void;
   setClients: (clients: Client[]) => void;
@@ -378,6 +410,8 @@ export const useStore = create<AppState>()(
       pins: [],
       labels: [],
       notifications: [],
+      feedbacks: [],
+      teamUsers: [],
       session: null,
       language: 'pt-BR',
       setSession: (session) => set({ session }),
@@ -448,6 +482,31 @@ export const useStore = create<AppState>()(
         }));
       },
       setLabels: (labels) => set({ labels }),
+
+      setFeedbacks: (feedbacks) => set({ feedbacks }),
+      addFeedback: async (feedback) => {
+        const id = genId();
+        const newFeedback: Feedback = { ...feedback, id, createdAt: new Date().toISOString() };
+        if (MOCK) { set(s => ({ feedbacks: [...s.feedbacks, newFeedback] })); return; }
+        await api('POST', '/api/feedbacks', newFeedback);
+        set(s => ({ feedbacks: [...s.feedbacks, newFeedback] }));
+      },
+      updateFeedback: async (id, data) => {
+        if (MOCK) { set(s => ({ feedbacks: s.feedbacks.map(f => f.id === id ? { ...f, ...data } : f) })); return; }
+        await api('PATCH', `/api/feedbacks/${id}`, data);
+        set(s => ({ feedbacks: s.feedbacks.map(f => f.id === id ? { ...f, ...data } : f) }));
+      },
+      deleteFeedback: async (id) => {
+        if (MOCK) { set(s => ({ feedbacks: s.feedbacks.filter(f => f.id !== id) })); return; }
+        await api('DELETE', `/api/feedbacks/${id}`);
+        set(s => ({ feedbacks: s.feedbacks.filter(f => f.id !== id) }));
+      },
+      setTeamUsers: (teamUsers) => set({ teamUsers }),
+      updateTeamUser: async (id, leaderId) => {
+        if (MOCK) { set(s => ({ teamUsers: s.teamUsers.map(u => u.id === id ? { ...u, leaderId: leaderId ?? undefined } : u) })); return; }
+        await api('PATCH', `/api/team/${id}`, { leaderId });
+        set(s => ({ teamUsers: s.teamUsers.map(u => u.id === id ? { ...u, leaderId: leaderId ?? undefined } : u) }));
+      },
 
       setPins: (pins) => set({ pins }),
       setClients: (clients) => set({ clients }),

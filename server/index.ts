@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js';
 import entitiesRouter from './routes/entities.js';
 import invitationsRouter from './routes/invitations.js';
 import uploadsRouter from './routes/uploads.js';
+import teamRouter from './routes/team.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
@@ -25,6 +26,7 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/api/auth',        authRouter);
 app.use('/api/invitations', invitationsRouter);
 app.use('/api/upload',      uploadsRouter);
+app.use('/api/team',        teamRouter);
 app.use('/api',             entitiesRouter);
 
 // ── Error handler global ─────────────────────────────────────────────────────

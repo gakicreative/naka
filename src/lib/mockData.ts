@@ -1,4 +1,4 @@
-import type { Client, Project, Task, Transaction, TaskLabel, Notification, BrandHub, ProjectMember } from '../store';
+import type { Client, Project, Task, Transaction, TaskLabel, Notification, BrandHub, ProjectMember, TeamUser, Feedback } from '../store';
 
 const today = new Date().toISOString().slice(0, 10);
 const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -300,6 +300,19 @@ export const MOCK_TASKS: Task[] = [
     createdAt: yesterday,
     tags: [],
   },
+  {
+    id: 'task-feedback-test',
+    title: 'Layout homepage — aprovação visual',
+    description: 'Proposta de layout para a home. Duas versões: desktop e mobile. Abra o chat para ver as imagens e testar o feedback visual.',
+    status: 'review',
+    priority: 'Alta',
+    clientId: 'mock-client-1',
+    projectId: 'mock-project-1',
+    dueDate: today,
+    assignees: ['Dev Admin'],
+    createdAt: yesterday,
+    tags: [],
+  },
 ];
 
 export const MOCK_LABELS: TaskLabel[] = [
@@ -442,4 +455,19 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     read: false,
     createdAt: new Date().toISOString(),
   },
+];
+
+export const MOCK_TEAM_USERS: TeamUser[] = [
+  { id: 'user-1', name: 'Dev Admin',    email: 'dev@naka.local',    role: 'admin',  createdAt: yesterday },
+  { id: 'user-2', name: 'Ana Socio',    email: 'ana@naka.local',    role: 'socio',  createdAt: yesterday },
+  { id: 'user-3', name: 'Pedro Lider',  email: 'pedro@naka.local',  role: 'lider',  createdAt: yesterday },
+  { id: 'user-4', name: 'Carlos Seed',  email: 'carlos@naka.local', role: 'seeder', leaderId: 'user-3', createdAt: yesterday },
+  { id: 'user-5', name: 'Julia Seed',   email: 'julia@naka.local',  role: 'seeder', leaderId: 'user-3', createdAt: yesterday },
+  { id: 'user-6', name: 'Marcos Seed',  email: 'marcos@naka.local', role: 'seeder', createdAt: yesterday },
+];
+
+export const MOCK_FEEDBACKS: Feedback[] = [
+  { id: 'fb-1', taskId: 'task-done-1', clientId: 'mock-client-1', rating: 4, comment: 'Ótima comunicação!', createdAt: today },
+  { id: 'fb-2', taskId: 'task-done-2', clientId: 'mock-client-1', rating: 5, comment: 'Entregou no prazo.', createdAt: yesterday },
+  { id: 'fb-3', taskId: 'task-done-3', clientId: 'mock-client-2', rating: 3, comment: 'Alguns ajustes pedidos.', createdAt: today },
 ];

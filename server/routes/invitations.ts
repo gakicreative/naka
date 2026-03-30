@@ -46,7 +46,7 @@ router.post('/', async (req: AuthRequest, res) => {
   if (req.userRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
   try {
     const { role } = req.body as { role: string };
-    if (!['socio', 'seeder', 'cliente'].includes(role)) return res.status(400).json({ error: 'Role inválido' });
+    if (!['socio', 'lider', 'seeder', 'cliente'].includes(role)) return res.status(400).json({ error: 'Role inválido' });
     const id = crypto.randomUUID();
     await db.insert(invitations).values({ id, role, used: false, createdBy: req.userId! });
     const [invite] = await db.select().from(invitations).where(eq(invitations.id, id));
