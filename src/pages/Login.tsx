@@ -94,13 +94,8 @@ export function Login() {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md space-y-10">
         {/* Logo + Title */}
-        <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-on-primary font-headline font-bold text-3xl mx-auto shadow-lg shadow-primary/20">
-            N
-          </div>
-          <h1 className="text-3xl font-headline font-bold tracking-tight text-on-surface">
-            Naka OS
-          </h1>
+        <div className="text-center space-y-4">
+          <img src="/naka-logo.svg" alt="Naka" className="h-12 w-auto mx-auto" />
           <p className="text-on-surface-variant text-sm">
             {t('login.subtitle')}
           </p>
