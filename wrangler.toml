@@ -21,8 +21,7 @@ bucket_name = "naka-uploads"
 # Variáveis de ambiente — preencha antes do deploy
 # Ou configure pelo dashboard: Workers > nakaos > Settings > Variables
 [vars]
-ADMIN_EMAIL = "admin@naka.app"
-# JWT_SECRET          = "troque-por-string-segura"
-# GOOGLE_CLIENT_ID    = "seu-client-id.apps.googleusercontent.com"
-# GOOGLE_CLIENT_SECRET = "seu-client-secret"
-# GOOGLE_CALLBACK_URL = "https://nakaos.workers.dev/api/auth/google/callback"
+ADMIN_EMAIL        = "admin@naka.app"
+GOOGLE_CLIENT_ID   = "591985430263-co1m92b6b6lmsj77lgnatvniubc6msq0.apps.googleusercontent.com"
+GOOGLE_CALLBACK_URL = "https://nakaos.workers.dev/api/auth/google/callback"
+# JWT_SECRET e GOOGLE_CLIENT_SECRET ficam como secrets (não commitados)
