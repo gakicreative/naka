@@ -1,49 +1,54 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { ne, eq } from 'drizzle-orm';
-import { db, users } from '../db.js';
-import { requireAuth, type AuthRequest } from '../auth.js';
+import { getDb, users } from '../db.js';
+import { requireAuth } from '../auth.js';
+import type { Env } from '../types.js';
 
-const router = Router();
-router.use(requireAuth);
+const router = new Hono<Env>();
+router.use('/*', requireAuth);
 
 // GET /api/team — lista todos os usuários que não são clientes
-router.get('/', async (req: AuthRequest, res) => {
-  if (!['admin', 'socio', 'lider'].includes(req.userRole!)) {
-    return res.status(403).json({ error: 'Forbidden' });
+router.get('/', async (c) => {
+  const role = c.get('userRole');
+  if (!['admin', 'socio', 'lider'].includes(role)) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
   try {
+    const db      = getDb(c.env.DB);
     const members = await db
       .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        leaderId: users.leaderId,
+        id:        users.id,
+        name:      users.name,
+        email:     users.email,
+        role:      users.role,
+        leaderId:  users.leaderId,
         createdAt: users.createdAt,
       })
       .from(users)
       .where(ne(users.role, 'cliente'));
-    res.json(members);
+    return c.json(members);
   } catch (err) {
     console.error('GET /api/team error:', err);
-    res.status(500).json({ error: 'Erro interno' });
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
-// PATCH /api/team/:id — atribui líder a um seeder (admin/socio/lider)
-router.patch('/:id', async (req: AuthRequest, res) => {
-  if (!['admin', 'socio', 'lider'].includes(req.userRole!)) {
-    return res.status(403).json({ error: 'Forbidden' });
+// PATCH /api/team/:id — atribui líder a um seeder
+router.patch('/:id', async (c) => {
+  const role = c.get('userRole');
+  if (!['admin', 'socio', 'lider'].includes(role)) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
   try {
-    const { leaderId } = req.body as { leaderId: string | null };
+    const db               = getDb(c.env.DB);
+    const { leaderId } = await c.req.json<{ leaderId: string | null }>();
     await db.update(users)
       .set({ leaderId: leaderId ?? null })
-      .where(eq(users.id, req.params.id));
-    res.json({ ok: true });
+      .where(eq(users.id, c.req.param('id')));
+    return c.json({ ok: true });
   } catch (err) {
     console.error('PATCH /api/team/:id error:', err);
-    res.status(500).json({ error: 'Erro interno' });
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 

@@ -1,72 +1,77 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
-import { db, clients, projects, tasks, transactions, brandhubs, pins, labels, notifications, feedbacks } from '../db.js';
+import { getDb, clients, projects, tasks, transactions, brandhubs, pins, labels, notifications, feedbacks } from '../db.js';
 import { requireAuth } from '../auth.js';
+import type { Env } from '../types.js';
 
-const router = Router();
-router.use(requireAuth);
+const router = new Hono<Env>();
+router.use('/*', requireAuth);
 
-// Map collection name → drizzle table
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TABLES: Record<string, any> = {
   clients, projects, tasks, transactions, brandhubs, pins, labels, notifications, feedbacks,
 };
 
 // ── GET /api/:collection ─────────────────────────────────────────────────────
-router.get('/:collection', async (req, res) => {
-  const table = TABLES[req.params.collection];
-  if (!table) return res.status(404).json({ error: 'Collection not found' });
+router.get('/:collection', async (c) => {
+  const table = TABLES[c.req.param('collection')];
+  if (!table) return c.json({ error: 'Collection not found' }, 404);
   try {
+    const db   = getDb(c.env.DB);
     const rows = await db.select().from(table);
-    res.json(rows.map(r => r.payload));
+    return c.json(rows.map((r: { payload: unknown }) => r.payload));
   } catch (err) {
-    console.error(`GET /${req.params.collection} error:`, err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error(`GET /${c.req.param('collection')} error:`, err);
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
 // ── POST /api/:collection ────────────────────────────────────────────────────
-router.post('/:collection', async (req, res) => {
-  const table = TABLES[req.params.collection];
-  if (!table) return res.status(404).json({ error: 'Collection not found' });
+router.post('/:collection', async (c) => {
+  const table = TABLES[c.req.param('collection')];
+  if (!table) return c.json({ error: 'Collection not found' }, 404);
   try {
-    const payload = req.body as Record<string, unknown>;
-    const id = (payload.id as string) || crypto.randomUUID();
-    const data = { ...payload, id };
+    const db      = getDb(c.env.DB);
+    const payload = await c.req.json<Record<string, unknown>>();
+    const id      = (payload.id as string) || crypto.randomUUID();
+    const data    = { ...payload, id };
     await db.insert(table).values({ id, payload: data });
-    res.status(201).json(data);
+    return c.json(data, 201);
   } catch (err) {
-    console.error(`POST /${req.params.collection} error:`, err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error(`POST /${c.req.param('collection')} error:`, err);
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
 // ── PATCH /api/:collection/:id ───────────────────────────────────────────────
-router.patch('/:collection/:id', async (req, res) => {
-  const table = TABLES[req.params.collection];
-  if (!table) return res.status(404).json({ error: 'Collection not found' });
+router.patch('/:collection/:id', async (c) => {
+  const table = TABLES[c.req.param('collection')];
+  if (!table) return c.json({ error: 'Collection not found' }, 404);
   try {
-    const [existing] = await db.select().from(table).where(eq(table.id, req.params.id));
-    if (!existing) return res.status(404).json({ error: 'Not found' });
-    const merged = { ...(existing.payload as object), ...req.body, id: req.params.id };
-    await db.update(table).set({ payload: merged }).where(eq(table.id, req.params.id));
-    res.json(merged);
+    const db   = getDb(c.env.DB);
+    const [existing] = await db.select().from(table).where(eq(table.id, c.req.param('id')));
+    if (!existing) return c.json({ error: 'Not found' }, 404);
+    const body   = await c.req.json<Record<string, unknown>>();
+    const merged = { ...(existing.payload as object), ...body, id: c.req.param('id') };
+    await db.update(table).set({ payload: merged }).where(eq(table.id, c.req.param('id')));
+    return c.json(merged);
   } catch (err) {
-    console.error(`PATCH /${req.params.collection}/${req.params.id} error:`, err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error(`PATCH /${c.req.param('collection')}/${c.req.param('id')} error:`, err);
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
 // ── DELETE /api/:collection/:id ──────────────────────────────────────────────
-router.delete('/:collection/:id', async (req, res) => {
-  const table = TABLES[req.params.collection];
-  if (!table) return res.status(404).json({ error: 'Collection not found' });
+router.delete('/:collection/:id', async (c) => {
+  const table = TABLES[c.req.param('collection')];
+  if (!table) return c.json({ error: 'Collection not found' }, 404);
   try {
-    await db.delete(table).where(eq(table.id, req.params.id));
-    res.json({ ok: true });
+    const db = getDb(c.env.DB);
+    await db.delete(table).where(eq(table.id, c.req.param('id')));
+    return c.json({ ok: true });
   } catch (err) {
-    console.error(`DELETE /${req.params.collection}/${req.params.id} error:`, err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error(`DELETE /${c.req.param('collection')}/${c.req.param('id')} error:`, err);
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 

@@ -1,68 +1,49 @@
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { initDb } from './db.js';
-import authRouter from './routes/auth.js';
-import entitiesRouter from './routes/entities.js';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import type { Env } from './types.js';
+import authRouter        from './routes/auth.js';
+import entitiesRouter    from './routes/entities.js';
 import invitationsRouter from './routes/invitations.js';
-import uploadsRouter from './routes/uploads.js';
-import teamRouter from './routes/team.js';
+import uploadsRouter     from './routes/uploads.js';
+import teamRouter        from './routes/team.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-const DIST_DIR = path.join(__dirname, '..', 'dist');
+const app = new Hono<Env>();
 
-const app = express();
-
-// ── Middleware ────────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '20mb' }));
-app.use(cookieParser());
-
-// ── Static files ─────────────────────────────────────────────────────────────
-app.use('/uploads', express.static(UPLOAD_DIR));
+// ── CORS — necessário pois frontend (Pages) e Worker ficam em origens distintas
+app.use('*', cors({
+  origin:      (origin) => origin || '*',
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth',        authRouter);
-app.use('/api/invitations', invitationsRouter);
-app.use('/api/upload',      uploadsRouter);
-app.use('/api/team',        teamRouter);
-app.use('/api',             entitiesRouter);
+app.route('/api/auth',        authRouter);
+app.route('/api/invitations', invitationsRouter);
+app.route('/api/upload',      uploadsRouter);
+app.route('/api/team',        teamRouter);
+app.route('/api',             entitiesRouter);
 
-// ── Error handler global ─────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('[Server Error]', req.method, req.path, err.message);
-  if (req.path.includes('/google')) {
-    return res.redirect('/login?error=oauth_failed');
-  }
-  if (req.path.startsWith('/api')) {
-    return res.status(500).json({ error: err.message || 'Erro interno' });
-  }
-  res.status(500).send(`<h1>Erro</h1><pre>${err.message}</pre>`);
+// ── Servir arquivos do R2 ─────────────────────────────────────────────────────
+app.get('/uploads/:key{.+$}', async (c) => {
+  const key = c.req.param('key');
+  const obj = await c.env.BUCKET.get(key);
+  if (!obj) return c.json({ error: 'Arquivo não encontrado' }, 404);
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  headers.set('etag', obj.httpEtag);
+  headers.set('cache-control', 'public, max-age=31536000, immutable');
+  return new Response(obj.body, { headers });
 });
 
-// ── Serve React SPA ───────────────────────────────────────────────────────────
-app.use(express.static(DIST_DIR));
-app.get('*', (_req, res) => {
-  const index = path.join(DIST_DIR, 'index.html');
-  res.sendFile(index, (err) => {
-    if (err) res.status(500).send('App not built. Run npm run build first.');
-  });
+// ── SPA fallback — tudo que não é /api ou /uploads vai pro frontend ───────────
+// O binding ASSETS serve os arquivos do dist/ (gerado pelo vite build)
+app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw));
+
+app.onError((err, c) => {
+  console.error('[Worker Error]', err.message);
+  return c.json({ error: err.message || 'Erro interno' }, 500);
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT || '3000', 10);
-
-initDb()
-  .then(() => {
-    console.log('Google OAuth CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ definido' : '❌ NÃO DEFINIDO');
-    console.log('Google OAuth CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL || '⚠️ usando localhost padrão');
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Naka OS server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to init DB:', err);
-    process.exit(1);
-  });
+// Exportação padrão de Worker (não usa app.listen)
+export default app;

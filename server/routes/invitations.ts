@@ -1,72 +1,76 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { eq, desc } from 'drizzle-orm';
-import { db, invitations } from '../db.js';
-import { requireAuth, type AuthRequest } from '../auth.js';
+import { getDb, invitations } from '../db.js';
+import { requireAuth } from '../auth.js';
+import type { Env } from '../types.js';
 
-const router = Router();
+const router = new Hono<Env>();
 
 // ── GET /api/invitations/check/:id (pública — sem auth) ───────────────────────
-router.get('/check/:id', async (req, res) => {
+router.get('/check/:id', async (c) => {
   try {
-    const [invite] = await db.select().from(invitations).where(eq(invitations.id, req.params.id));
-    if (!invite) return res.status(404).json({ error: 'Convite não encontrado' });
-    if (invite.used) return res.status(410).json({ error: 'Convite já utilizado' });
-    res.json({ id: invite.id, role: invite.role, valid: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno' });
+    const db     = getDb(c.env.DB);
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, c.req.param('id')));
+    if (!invite) return c.json({ error: 'Convite não encontrado' }, 404);
+    if (invite.used) return c.json({ error: 'Convite já utilizado' }, 410);
+    return c.json({ id: invite.id, role: invite.role, valid: true });
+  } catch {
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
-
-router.use(requireAuth);
 
 // ── GET /api/invitations ─────────────────────────────────────────────────────
-router.get('/', async (req: AuthRequest, res) => {
-  if (req.userRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+router.get('/', requireAuth, async (c) => {
+  if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
+    const db   = getDb(c.env.DB);
     const rows = await db.select().from(invitations).orderBy(desc(invitations.createdAt));
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno' });
+    return c.json(rows);
+  } catch {
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
-// ── GET /api/invitations/:id (public — for checking invite validity) ──────────
-router.get('/:id', async (req, res) => {
+// ── GET /api/invitations/:id ──────────────────────────────────────────────────
+router.get('/:id', requireAuth, async (c) => {
   try {
-    const [invite] = await db.select().from(invitations).where(eq(invitations.id, req.params.id));
-    if (!invite) return res.status(404).json({ error: 'Convite não encontrado' });
-    res.json({ id: invite.id, role: invite.role, used: invite.used });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno' });
+    const db     = getDb(c.env.DB);
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, c.req.param('id')));
+    if (!invite) return c.json({ error: 'Convite não encontrado' }, 404);
+    return c.json({ id: invite.id, role: invite.role, used: invite.used });
+  } catch {
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
 // ── POST /api/invitations ────────────────────────────────────────────────────
-router.post('/', async (req: AuthRequest, res) => {
-  if (req.userRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+router.post('/', requireAuth, async (c) => {
+  if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
-    const { role } = req.body as { role: string };
-    if (!['socio', 'lider', 'seeder', 'cliente'].includes(role)) return res.status(400).json({ error: 'Role inválido' });
+    const db             = getDb(c.env.DB);
+    const { role } = await c.req.json<{ role: string }>();
+    if (!['socio', 'lider', 'seeder', 'cliente'].includes(role)) return c.json({ error: 'Role inválido' }, 400);
     const id = crypto.randomUUID();
-    await db.insert(invitations).values({ id, role, used: false, createdBy: req.userId! });
+    await db.insert(invitations).values({ id, role, used: false, createdBy: c.get('userId') });
     const [invite] = await db.select().from(invitations).where(eq(invitations.id, id));
-    res.status(201).json(invite);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno' });
+    return c.json(invite, 201);
+  } catch {
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 
 // ── DELETE /api/invitations/:id ─────────────────────────────────────────────
-router.delete('/:id', async (req: AuthRequest, res) => {
-  if (req.userRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+router.delete('/:id', requireAuth, async (c) => {
+  if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
-    const [invite] = await db.select().from(invitations).where(eq(invitations.id, req.params.id));
-    if (!invite) return res.status(404).json({ error: 'Convite não encontrado' });
-    if (invite.used) return res.status(400).json({ error: 'Não é possível cancelar convite já utilizado' });
-    await db.delete(invitations).where(eq(invitations.id, req.params.id));
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno' });
+    const db     = getDb(c.env.DB);
+    const [invite] = await db.select().from(invitations).where(eq(invitations.id, c.req.param('id')));
+    if (!invite) return c.json({ error: 'Convite não encontrado' }, 404);
+    if (invite.used) return c.json({ error: 'Não é possível cancelar convite já utilizado' }, 400);
+    await db.delete(invitations).where(eq(invitations.id, c.req.param('id')));
+    return c.json({ ok: true });
+  } catch {
+    return c.json({ error: 'Erro interno' }, 500);
   }
 });
 

@@ -1,36 +1,44 @@
-import { Router } from 'express';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { Hono } from 'hono';
 import { requireAuth } from '../auth.js';
+import type { Env } from '../types.js';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'];
+const MAX_SIZE = 20 * 1024 * 1024; // 20MB
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${crypto.randomUUID()}${ext}`);
-  },
-});
+const router = new Hono<Env>();
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
-  fileFilter: (_req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'];
-    cb(null, allowed.includes(file.mimetype));
-  },
-});
+// POST /api/upload — salva arquivo no R2
+router.post('/', requireAuth, async (c) => {
+  let formData: FormData;
+  try {
+    formData = await c.req.formData();
+  } catch {
+    return c.json({ error: 'Requisição inválida' }, 400);
+  }
 
-const router = Router();
-router.use(requireAuth);
+  const file = formData.get('file');
+  if (!file || typeof file === 'string') {
+    return c.json({ error: 'Nenhum arquivo enviado' }, 400);
+  }
 
-router.post('/', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-  const url = `/uploads/${req.file.filename}`;
-  res.json({ url });
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return c.json({ error: 'Tipo de arquivo não permitido' }, 400);
+  }
+
+  const buffer = await file.arrayBuffer();
+  if (buffer.byteLength > MAX_SIZE) {
+    return c.json({ error: 'Arquivo maior que 20MB' }, 400);
+  }
+
+  const dotIndex = file.name.lastIndexOf('.');
+  const ext = dotIndex >= 0 ? file.name.slice(dotIndex).toLowerCase() : '';
+  const key = `${crypto.randomUUID()}${ext}`;
+
+  await c.env.BUCKET.put(key, buffer, {
+    httpMetadata: { contentType: file.type },
+  });
+
+  return c.json({ url: `/uploads/${key}` });
 });
 
 export default router;

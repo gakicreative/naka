@@ -1,0 +1,28 @@
+name = "nakaos"
+main = "server/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Frontend buildado (vite build → dist/)
+# O Worker serve os arquivos estáticos E a API no mesmo deploy
+[assets]
+directory = "./dist"
+binding   = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nakaosdb"
+database_id = "5a208c31-13b3-4cba-a9db-08d8071d3230"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "naka-uploads"
+
+# Variáveis de ambiente — preencha antes do deploy
+# Ou configure pelo dashboard: Workers > nakaos > Settings > Variables
+[vars]
+ADMIN_EMAIL = "admin@naka.app"
+# JWT_SECRET          = "troque-por-string-segura"
+# GOOGLE_CLIENT_ID    = "seu-client-id.apps.googleusercontent.com"
+# GOOGLE_CLIENT_SECRET = "seu-client-secret"
+# GOOGLE_CALLBACK_URL = "https://nakaos.workers.dev/api/auth/google/callback"

@@ -1,38 +1,39 @@
-import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { createMiddleware } from 'hono/factory';
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { sign, verify } from 'hono/jwt';
+import type { Context } from 'hono';
+import type { Env } from './types.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-please-change';
 const COOKIE_NAME = 'naka_token';
-const COOKIE_OPTS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-};
+const TOKEN_TTL   = 30 * 24 * 60 * 60; // 30 dias em segundos
 
-export interface AuthRequest extends Request {
-  userId?: string;
-  userRole?: string;
-}
-
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const token = req.cookies?.[COOKIE_NAME];
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+// ── Middleware de autenticação ────────────────────────────────────────────────
+export const requireAuth = createMiddleware<Env>(async (c, next) => {
+  const token = getCookie(c, COOKIE_NAME);
+  if (!token) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
-    req.userId = payload.userId;
-    req.userRole = payload.role;
-    next();
+    const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as { userId: string; role: string };
+    c.set('userId', payload.userId);
+    c.set('userRole', payload.role);
+    await next();
   } catch {
-    res.status(401).json({ error: 'Invalid token' });
+    return c.json({ error: 'Invalid token' }, 401);
   }
+});
+
+// ── Helpers de token/cookie ───────────────────────────────────────────────────
+export async function setToken(c: Context<Env>, userId: string, role: string) {
+  const exp   = Math.floor(Date.now() / 1000) + TOKEN_TTL;
+  const token = await sign({ userId, role, exp }, c.env.JWT_SECRET, 'HS256');
+  setCookie(c, COOKIE_NAME, token, {
+    httpOnly: true,
+    secure:   true,
+    sameSite: 'None',   // necessário para cross-domain (Pages ↔ Worker)
+    maxAge:   TOKEN_TTL,
+    path:     '/',
+  });
 }
 
-export function setToken(res: Response, userId: string, role: string) {
-  const token = jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '30d' });
-  res.cookie(COOKIE_NAME, token, COOKIE_OPTS);
-}
-
-export function clearToken(res: Response) {
-  res.clearCookie(COOKIE_NAME);
+export function clearToken(c: Context<Env>) {
+  deleteCookie(c, COOKIE_NAME, { path: '/' });
 }
