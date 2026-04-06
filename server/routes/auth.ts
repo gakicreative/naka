@@ -1,11 +1,26 @@
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-import { getDb, users, invitations } from '../db.js';
+import { getDb, users, invitations, organizations } from '../db.js';
 import { requireAuth, setToken, clearToken } from '../auth.js';
 import type { Env } from '../types.js';
 
 const router = new Hono<Env>();
+
+// Gera slug URL-friendly a partir do nome da organização
+function makeSlug(name: string): string {
+  const base   = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return base ? `${base}-${suffix}` : suffix;
+}
+
+// Cria uma organização e retorna o id
+async function createOrg(db: ReturnType<typeof getDb>, name: string, createdBy: string): Promise<string> {
+  const id  = crypto.randomUUID();
+  const slug = makeSlug(name);
+  await db.insert(organizations).values({ id, name, slug, createdBy, createdAt: new Date().toISOString() });
+  return id;
+}
 
 // ── POST /api/auth/login ─────────────────────────────────────────────────────
 router.post('/login', async (c) => {
@@ -21,8 +36,15 @@ router.post('/login', async (c) => {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return c.json({ error: 'Email ou senha incorretos' }, 401);
 
-    await setToken(c, user.id, user.role);
-    return c.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, activeClientId: user.activeClientId } });
+    // Se o usuário não tem org ainda (conta anterior à multi-tenancy), cria uma agora
+    let orgId = user.orgId ?? '';
+    if (!orgId) {
+      orgId = await createOrg(db, `${user.name}'s Studio`, user.id);
+      await db.update(users).set({ orgId }).where(eq(users.id, user.id));
+    }
+
+    await setToken(c, user.id, user.role, orgId);
+    return c.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, activeClientId: user.activeClientId, orgId } });
   } catch (err) {
     console.error('Login error:', err);
     return c.json({ error: 'Erro interno' }, 500);
@@ -45,30 +67,35 @@ router.post('/register', async (c) => {
     const [existing] = await db.select().from(users).where(eq(users.email, normalizedEmail));
     if (existing) return c.json({ error: 'Email já cadastrado' }, 409);
 
-    // Conta quantos usuários existem para definir se é o primeiro admin
     const countResult = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
     const count       = countResult?.count ?? 0;
 
-    let role: string = 'cliente';
-    if (count === 0) {
-      role = 'admin';
-    } else if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
-      role = 'admin';
+    const id           = crypto.randomUUID();
+    const passwordHash = await bcrypt.hash(password, 12);
+    let role: string   = 'cliente';
+    let orgId: string;
+
+    if (count === 0 || normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
+      // Primeiro usuário ou email admin: cria uma nova organização
+      role  = 'admin';
+      orgId = await createOrg(db, `${name}'s Studio`, id);
     } else if (inviteId) {
       const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
       if (!invite || invite.used) return c.json({ error: 'Convite inválido ou já utilizado' }, 400);
-      role = invite.role;
+      if (!invite.orgId) return c.json({ error: 'Convite sem organização associada' }, 400);
+      role  = invite.role;
+      orgId = invite.orgId;
       await db.update(invitations)
         .set({ used: true, usedBy: normalizedEmail, usedAt: new Date().toISOString() })
         .where(eq(invitations.id, inviteId));
+    } else {
+      return c.json({ error: 'Convite necessário para cadastro' }, 400);
     }
 
-    const id           = crypto.randomUUID();
-    const passwordHash = await bcrypt.hash(password, 12);
-    await db.insert(users).values({ id, email: normalizedEmail, name, passwordHash, role });
+    await db.insert(users).values({ id, email: normalizedEmail, name, passwordHash, role, orgId });
 
-    await setToken(c, id, role);
-    return c.json({ user: { id, email: normalizedEmail, name, role, activeClientId: null } }, 201);
+    await setToken(c, id, role, orgId);
+    return c.json({ user: { id, email: normalizedEmail, name, role, activeClientId: null, orgId } }, 201);
   } catch (err) {
     console.error('Register error:', err);
     return c.json({ error: 'Erro interno' }, 500);
@@ -144,15 +171,26 @@ router.get('/google/callback', async (c) => {
     // 1. Usuário existente por google_id
     const [byGoogleId] = await db.select().from(users).where(eq(users.googleId, googleId));
     if (byGoogleId) {
-      await setToken(c, byGoogleId.id, byGoogleId.role);
+      let orgId = byGoogleId.orgId ?? '';
+      if (!orgId) {
+        orgId = await createOrg(db, `${byGoogleId.name}'s Studio`, byGoogleId.id);
+        await db.update(users).set({ orgId }).where(eq(users.id, byGoogleId.id));
+      }
+      await setToken(c, byGoogleId.id, byGoogleId.role, orgId);
       return c.redirect(byGoogleId.role === 'cliente' ? '/portal' : '/');
     }
 
     // 2. Usuário existente pelo email → vincula google_id
     const [byEmail] = await db.select().from(users).where(eq(users.email, email));
     if (byEmail) {
-      await db.update(users).set({ googleId }).where(eq(users.id, byEmail.id));
-      await setToken(c, byEmail.id, byEmail.role);
+      let orgId = byEmail.orgId ?? '';
+      if (!orgId) {
+        orgId = await createOrg(db, `${byEmail.name}'s Studio`, byEmail.id);
+        await db.update(users).set({ googleId, orgId }).where(eq(users.id, byEmail.id));
+      } else {
+        await db.update(users).set({ googleId }).where(eq(users.id, byEmail.id));
+      }
+      await setToken(c, byEmail.id, byEmail.role, orgId);
       return c.redirect(byEmail.role === 'cliente' ? '/portal' : '/');
     }
 
@@ -160,30 +198,31 @@ router.get('/google/callback', async (c) => {
     const ADMIN_EMAIL = (c.env.ADMIN_EMAIL || 'admin@naka.app').toLowerCase();
     const isAdminEmail = email === ADMIN_EMAIL;
 
-    // Conta usuários: primeiro cadastro vira admin automaticamente
     const countResult = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
     const isFirstUser = (countResult?.count ?? 0) === 0;
 
-    let id   = crypto.randomUUID();
-    let role = 'cliente';
+    const id   = crypto.randomUUID();
+    let role   = 'cliente';
+    let orgId: string;
 
     if (isFirstUser || isAdminEmail) {
-      // Admin não precisa de convite
-      role = 'admin';
-      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
+      role  = 'admin';
+      orgId = await createOrg(db, `${name}'s Studio`, id);
+      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role, orgId });
     } else {
-      // Usuário comum → precisa de convite
       if (!inviteId) return c.redirect('/login?error=invite_required');
       const [invite] = await db.select().from(invitations).where(eq(invitations.id, inviteId));
       if (!invite || invite.used) return c.redirect('/login?error=invite_invalid');
-      role = invite.role;
-      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role });
+      if (!invite.orgId) return c.redirect('/login?error=invite_invalid');
+      role  = invite.role;
+      orgId = invite.orgId;
+      await db.insert(users).values({ id, email, name, googleId, passwordHash: null, role, orgId });
       await db.update(invitations)
         .set({ used: true, usedBy: email, usedAt: new Date().toISOString() })
         .where(eq(invitations.id, inviteId));
     }
 
-    await setToken(c, id, role);
+    await setToken(c, id, role, orgId);
     return c.redirect(role === 'cliente' ? '/portal' : '/');
 
   } catch (err) {
@@ -192,13 +231,23 @@ router.get('/google/callback', async (c) => {
   }
 });
 
+const VALID_TASK_VIEWS = ['kanban', 'list', 'calendar', 'timeline', 'board-by-client'] as const;
+
 // ── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', requireAuth, async (c) => {
   try {
     const db     = getDb(c.env.DB);
     const [user] = await db.select().from(users).where(eq(users.id, c.get('userId')));
     if (!user) return c.json({ error: 'Usuário não encontrado' }, 401);
-    return c.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, activeClientId: user.activeClientId } });
+
+    let orgLogoUrl: string | null = null;
+    let orgName = '';
+    if (user.orgId) {
+      const [org] = await db.select().from(organizations).where(eq(organizations.id, user.orgId));
+      if (org) { orgLogoUrl = org.logoUrl ?? null; orgName = org.name; }
+    }
+
+    return c.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, activeClientId: user.activeClientId, orgId: user.orgId ?? '', taskView: user.taskView ?? null, orgLogoUrl, orgName } });
   } catch (err) {
     console.error('Me error:', err);
     return c.json({ error: 'Erro interno' }, 500);
@@ -208,15 +257,20 @@ router.get('/me', requireAuth, async (c) => {
 // ── PATCH /api/auth/me ───────────────────────────────────────────────────────
 router.patch('/me', requireAuth, async (c) => {
   try {
-    const db                    = getDb(c.env.DB);
-    const { name, activeClientId } = await c.req.json<{ name?: string; activeClientId?: string }>();
+    const db = getDb(c.env.DB);
+    const body = await c.req.json<{ name?: string; activeClientId?: string; taskView?: string }>();
     const updates: Record<string, unknown> = {};
-    if (name) updates.name = name;
-    if (activeClientId !== undefined) updates.activeClientId = activeClientId || null;
+    if (body.name) updates.name = body.name;
+    if (body.activeClientId !== undefined) updates.activeClientId = body.activeClientId || null;
+    if (body.taskView !== undefined) {
+      if (!VALID_TASK_VIEWS.includes(body.taskView as typeof VALID_TASK_VIEWS[number])) {
+        return c.json({ error: 'taskView inválido' }, 400);
+      }
+      updates.taskView = body.taskView;
+    }
 
     await db.update(users).set(updates as never).where(eq(users.id, c.get('userId')));
-    const [user] = await db.select().from(users).where(eq(users.id, c.get('userId')));
-    return c.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, activeClientId: user.activeClientId } });
+    return c.json({ ok: true });
   } catch (err) {
     console.error('Update me error:', err);
     return c.json({ error: 'Erro interno' }, 500);

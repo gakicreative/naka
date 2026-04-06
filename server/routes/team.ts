@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { ne, eq } from 'drizzle-orm';
+import { ne, eq, and } from 'drizzle-orm';
 import { getDb, users } from '../db.js';
 import { requireAuth } from '../auth.js';
 import type { Env } from '../types.js';
@@ -7,14 +7,15 @@ import type { Env } from '../types.js';
 const router = new Hono<Env>();
 router.use('/*', requireAuth);
 
-// GET /api/team — lista todos os usuários que não são clientes
+// GET /api/team — lista membros da mesma organização (exceto clientes)
 router.get('/', async (c) => {
   const role = c.get('userRole');
   if (!['admin', 'socio', 'lider'].includes(role)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
   try {
-    const db      = getDb(c.env.DB);
+    const db    = getDb(c.env.DB);
+    const orgId = c.get('orgId');
     const members = await db
       .select({
         id:        users.id,
@@ -25,7 +26,7 @@ router.get('/', async (c) => {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(ne(users.role, 'cliente'));
+      .where(and(eq(users.orgId, orgId), ne(users.role, 'cliente')));
     return c.json(members);
   } catch (err) {
     console.error('GET /api/team error:', err);
@@ -40,11 +41,13 @@ router.patch('/:id', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
   try {
-    const db               = getDb(c.env.DB);
+    const db    = getDb(c.env.DB);
+    const orgId = c.get('orgId');
     const { leaderId } = await c.req.json<{ leaderId: string | null }>();
+    // Garante que só altera membros da mesma organização
     await db.update(users)
       .set({ leaderId: leaderId ?? null })
-      .where(eq(users.id, c.req.param('id')));
+      .where(and(eq(users.id, c.req.param('id')), eq(users.orgId, orgId)));
     return c.json({ ok: true });
   } catch (err) {
     console.error('PATCH /api/team/:id error:', err);

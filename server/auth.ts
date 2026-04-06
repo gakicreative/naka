@@ -12,9 +12,10 @@ export const requireAuth = createMiddleware<Env>(async (c, next) => {
   const token = getCookie(c, COOKIE_NAME);
   if (!token) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as { userId: string; role: string };
+    const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as { userId: string; role: string; orgId: string };
     c.set('userId', payload.userId);
     c.set('userRole', payload.role);
+    c.set('orgId', payload.orgId ?? '');
     await next();
   } catch {
     return c.json({ error: 'Invalid token' }, 401);
@@ -22,9 +23,9 @@ export const requireAuth = createMiddleware<Env>(async (c, next) => {
 });
 
 // ── Helpers de token/cookie ───────────────────────────────────────────────────
-export async function setToken(c: Context<Env>, userId: string, role: string) {
+export async function setToken(c: Context<Env>, userId: string, role: string, orgId: string) {
   const exp   = Math.floor(Date.now() / 1000) + TOKEN_TTL;
-  const token = await sign({ userId, role, exp }, c.env.JWT_SECRET, 'HS256');
+  const token = await sign({ userId, role, orgId, exp }, c.env.JWT_SECRET, 'HS256');
   setCookie(c, COOKIE_NAME, token, {
     httpOnly: true,
     secure:   true,

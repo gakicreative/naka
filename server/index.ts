@@ -6,6 +6,7 @@ import entitiesRouter    from './routes/entities.js';
 import invitationsRouter from './routes/invitations.js';
 import uploadsRouter     from './routes/uploads.js';
 import teamRouter        from './routes/team.js';
+import orgsRouter        from './routes/orgs.js';
 
 const app = new Hono<Env>();
 
@@ -22,6 +23,7 @@ app.route('/api/auth',        authRouter);
 app.route('/api/invitations', invitationsRouter);
 app.route('/api/upload',      uploadsRouter);
 app.route('/api/team',        teamRouter);
+app.route('/api/orgs',        orgsRouter);
 app.route('/api',             entitiesRouter);
 
 // ── Servir arquivos do R2 ─────────────────────────────────────────────────────
