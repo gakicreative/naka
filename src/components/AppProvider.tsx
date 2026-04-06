@@ -88,6 +88,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           name: u.name,
           email: u.email,
           activeClientId: u.activeClientId,
+          orgId: u.orgId,
+          taskView: u.taskView ?? null,
+          orgLogoUrl: u.orgLogoUrl ?? null,
+          orgName: u.orgName ?? '',
         });
         setUserName(u.name);
 

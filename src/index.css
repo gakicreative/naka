@@ -2,31 +2,27 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary */
+  /* ── Material You tokens (projeto) ─────────────────────────────────────── */
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --color-primary-container: var(--primary-container);
   --color-on-primary-container: var(--on-primary-container);
 
-  /* Secondary */
   --color-secondary: var(--secondary);
   --color-on-secondary: var(--on-secondary);
   --color-secondary-container: var(--secondary-container);
   --color-on-secondary-container: var(--on-secondary-container);
 
-  /* Tertiary */
   --color-tertiary: var(--tertiary);
   --color-on-tertiary: var(--on-tertiary);
   --color-tertiary-container: var(--tertiary-container);
   --color-on-tertiary-container: var(--on-tertiary-container);
 
-  /* Error */
   --color-error: var(--error);
   --color-on-error: var(--on-error);
   --color-error-container: var(--error-container);
   --color-on-error-container: var(--on-error-container);
 
-  /* Background */
   --color-background: var(--background);
   --color-on-background: var(--on-background);
   --color-surface: var(--surface);
@@ -36,13 +32,42 @@
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
 
-  /* Container layers */
   --color-surface-container-lowest: var(--surface-container-lowest);
   --color-surface-container-low:    var(--surface-container-low);
   --color-surface-container:        var(--surface-container);
   --color-surface-container-high:   var(--surface-container-high);
   --color-surface-container-highest: var(--surface-container-highest);
 
+  /* ── shadcn/ui tokens (shadcnblocks) ────────────────────────────────────── */
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+
+  /* ── Radius ─────────────────────────────────────────────────────────────── */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
   --font-headline: "Manrope", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-label: "Inter", sans-serif;
@@ -99,6 +124,30 @@
   --nav-inactive-text: #6b7280;
   --nav-inactive-hover-bg: rgba(0, 0, 0, 0.03);
   --nav-inactive-hover-text: #374151;
+
+  /* ── shadcn/ui compatibility layer (light) ──────────────────────────────── */
+  --foreground: var(--on-background);
+  --card: var(--surface-container-low);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container);
+  --popover-foreground: var(--on-surface);
+  --muted: var(--surface-container);
+  --muted-foreground: var(--on-surface-variant);
+  --accent: var(--surface-container-high);
+  --accent-foreground: var(--on-surface);
+  --destructive: var(--error);
+  --destructive-foreground: var(--on-error);
+  --border: var(--outline);
+  --input: var(--surface-container-high);
+  --ring: var(--primary);
+  --sidebar: var(--surface-container-lowest);
+  --sidebar-foreground: var(--on-surface);
+  --sidebar-border: var(--outline-variant);
+  --sidebar-accent: var(--surface-container-low);
+  --sidebar-accent-foreground: var(--on-surface);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--on-primary);
+  --radius: 0.75rem;
 }
 
 .dark {
@@ -152,6 +201,30 @@
   --nav-inactive-text: #6b7280;
   --nav-inactive-hover-bg: rgba(255, 255, 255, 0.04);
   --nav-inactive-hover-text: #d1d5db;
+
+  /* ── shadcn/ui compatibility layer (dark) ───────────────────────────────── */
+  --foreground: var(--on-background);
+  --card: var(--surface-container-low);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container);
+  --popover-foreground: var(--on-surface);
+  --muted: var(--surface-container);
+  --muted-foreground: var(--on-surface-variant);
+  --accent: var(--surface-container-high);
+  --accent-foreground: var(--on-surface);
+  --destructive: var(--error);
+  --destructive-foreground: var(--on-error);
+  --border: var(--outline);
+  --input: var(--surface-container-high);
+  --ring: var(--primary);
+  --sidebar: var(--surface-container-lowest);
+  --sidebar-foreground: var(--on-surface);
+  --sidebar-border: var(--outline-variant);
+  --sidebar-accent: var(--surface-container-low);
+  --sidebar-accent-foreground: var(--on-surface);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--on-primary);
+  --radius: 0.75rem;
 }
 
 /* Smooth theme transitions */

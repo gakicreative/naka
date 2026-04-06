@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Palette, Shield, Key, Bell, Globe, Monitor, Moon, Sun, Users, Plus, Copy, Check, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Palette, Shield, Key, Bell, Globe, Monitor, Moon, Sun, Users, Plus, Copy, Check, Trash2, Building2, Upload, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useApp } from '../components/AppProvider';
 import { useStore } from '../store';
@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'motion/react';
-type Tab = 'profile' | 'visual' | 'permissions' | 'security' | 'notifications' | 'localization' | 'team';
+import { OrgLogo } from '../components/OrgLogo';
+type Tab = 'profile' | 'visual' | 'permissions' | 'security' | 'notifications' | 'localization' | 'team' | 'organization';
 
 export function Settings() {
   const { t, i18n } = useTranslation();
@@ -24,17 +25,22 @@ export function Settings() {
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
   const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
 
-  const tabs: { id: Tab; icon: React.ElementType; label: string; adminOnly?: boolean }[] = [
-    { id: 'profile',       icon: User,    label: t('settings.tabs.profile') },
-    { id: 'visual',        icon: Palette, label: t('settings.tabs.visual') },
-    { id: 'team',          icon: Users,   label: 'Equipe', adminOnly: true },
-    { id: 'permissions',   icon: Shield,  label: t('settings.tabs.permissions') },
-    { id: 'security',      icon: Key,     label: t('settings.tabs.security') },
-    { id: 'notifications', icon: Bell,    label: t('settings.tabs.notifications') },
-    { id: 'localization',  icon: Globe,   label: t('settings.tabs.localization') },
+  const tabs: { id: Tab; icon: React.ElementType; label: string; adminOnly?: boolean; adminOrSocio?: boolean }[] = [
+    { id: 'profile',       icon: User,       label: t('settings.tabs.profile') },
+    { id: 'visual',        icon: Palette,    label: t('settings.tabs.visual') },
+    { id: 'organization',  icon: Building2,  label: 'Organização', adminOrSocio: true },
+    { id: 'team',          icon: Users,      label: 'Equipe', adminOnly: true },
+    { id: 'permissions',   icon: Shield,     label: t('settings.tabs.permissions') },
+    { id: 'security',      icon: Key,        label: t('settings.tabs.security') },
+    { id: 'notifications', icon: Bell,       label: t('settings.tabs.notifications') },
+    { id: 'localization',  icon: Globe,      label: t('settings.tabs.localization') },
   ];
 
-  const visibleTabs = tabs.filter(tab => !tab.adminOnly || session?.role === 'admin');
+  const visibleTabs = tabs.filter(tab => {
+    if (tab.adminOnly) return session?.role === 'admin';
+    if (tab.adminOrSocio) return session?.role === 'admin' || session?.role === 'socio';
+    return true;
+  });
 
   useEffect(() => {
     if (activeTab === 'team' && session?.role === 'admin') {
@@ -148,6 +154,9 @@ export function Settings() {
         {/* Settings Content */}
         <div className="md:col-span-3 space-y-8">
           <AnimatePresence mode="wait">
+          {activeTab === 'organization' && (
+            <OrgLogoSection />
+          )}
           {activeTab === 'team' && session?.role === 'admin' && (
             <motion.section
               key="team"
@@ -471,5 +480,146 @@ export function Settings() {
       </div>
 
     </div>
+  );
+}
+
+// ── OrgLogoSection ────────────────────────────────────────────────────────────
+function OrgLogoSection() {
+  const storeSession = useStore(s => s.session);
+  const storeSetSession = useStore(s => s.setSession);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+  const MAX_BYTES = 5 * 1024 * 1024;
+
+  function validate(file: File): string | null {
+    if (!ALLOWED.includes(file.type)) return 'Formato não suportado. Use JPEG, PNG, WebP ou SVG.';
+    if (file.size > MAX_BYTES) return 'Arquivo maior que 5 MB.';
+    return null;
+  }
+
+  async function handleUpload(file: File) {
+    const err = validate(file);
+    if (err) { toast.error(err); return; }
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const upRes = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' });
+      if (!upRes.ok) throw new Error('Upload failed');
+      const { url } = await upRes.json() as { url: string };
+
+      const patchRes = await fetch('/api/orgs/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ logoUrl: url }),
+      });
+      if (!patchRes.ok) throw new Error('Save failed');
+
+      storeSetSession(storeSession ? { ...storeSession, orgLogoUrl: url } : storeSession);
+      toast.success('Logo atualizada com sucesso!');
+    } catch {
+      toast.error('Falha ao enviar arquivo. Tente novamente.');
+    } finally {
+      setIsUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  async function handleRemove() {
+    setIsRemoving(true);
+    try {
+      const res = await fetch('/api/orgs/me/logo', { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error();
+      storeSetSession(storeSession ? { ...storeSession, orgLogoUrl: null } : storeSession);
+      toast.success('Logo removida.');
+    } catch {
+      toast.error('Falha ao remover logo.');
+    } finally {
+      setIsRemoving(false);
+      setShowConfirm(false);
+    }
+  }
+
+  return (
+    <motion.section
+      key="organization"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+      className="bg-surface-container-low rounded-3xl p-6 md:p-8 border border-surface-container-high space-y-6"
+    >
+      <div>
+        <h2 className="font-headline font-semibold text-xl">Logo da Organização</h2>
+        <p className="text-sm text-on-surface-variant mt-1">
+          Substitui a identidade visual do Naka OS no painel e no portal do cliente.
+        </p>
+      </div>
+
+      {storeSession?.orgLogoUrl ? (
+        <div className="flex items-center gap-6 flex-wrap">
+          <div className="w-24 h-24 rounded-2xl bg-surface-container border border-surface-container-high flex items-center justify-center p-3">
+            <OrgLogo logoUrl={storeSession.orgLogoUrl} orgName={storeSession.orgName ?? ''} size="lg" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={isUploading}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <Upload className="w-4 h-4" />
+              {isUploading ? 'Enviando…' : 'Substituir logo'}
+            </button>
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={isRemoving}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-error/30 text-error text-sm font-medium hover:bg-error/10 transition-colors disabled:opacity-50"
+            >
+              <X className="w-4 h-4" />
+              Remover logo
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="border-2 border-dashed border-surface-container-high rounded-2xl p-8 flex flex-col items-center gap-3 cursor-pointer hover:border-primary/40 transition-colors"
+        >
+          <Upload className="w-8 h-8 text-on-surface-variant/40" />
+          <p className="text-sm font-medium text-on-surface">
+            {isUploading ? 'Enviando…' : 'Clique para fazer upload da logo'}
+          </p>
+          <p className="text-xs text-on-surface-variant">JPEG, PNG, WebP, SVG — máx. 5 MB</p>
+        </div>
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
+      />
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-surface-container-low border border-surface-container-high rounded-2xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <h3 className="font-semibold text-on-surface">Remover logo?</h3>
+            <p className="text-sm text-on-surface-variant">A logo será removida e o sistema voltará a exibir as iniciais da organização.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowConfirm(false)} className="px-4 py-2 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container transition-colors">Cancelar</button>
+              <button onClick={handleRemove} disabled={isRemoving} className="px-4 py-2 rounded-xl bg-error text-white text-sm font-medium hover:bg-error/90 transition-colors disabled:opacity-50">
+                {isRemoving ? 'Removendo…' : 'Remover'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.section>
   );
 }

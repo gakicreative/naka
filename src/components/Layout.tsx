@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationPanel } from './NotificationPanel';
+import { OrgLogo } from './OrgLogo';
 
 type NavItem = {
   iconName: string;
@@ -30,7 +31,7 @@ const navItems: NavItem[] = [
 
 export function Layout() {
   const { t } = useTranslation();
-  const { userName, userInitial } = useApp();
+  const { userName, userInitial, isAuthReady } = useApp();
   const notifications = useStore((s) => s.notifications) || [];
   const unreadCount = notifications.filter(n => !n.read).length;
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -61,7 +62,7 @@ export function Layout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 glass-sidebar flex-shrink-0">
         <div className="p-6 flex items-center">
-          <img src="/naka-logo.svg" alt="Naka OS" className="h-6 w-auto" />
+          <OrgLogo logoUrl={session?.orgLogoUrl} orgName={session?.orgName ?? 'Naka OS'} size="md" isLoading={!isAuthReady} />
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -108,7 +109,7 @@ export function Layout() {
         {/* Top App Bar */}
         <header className="h-14 flex items-center justify-between px-4 md:px-6 sticky top-0 z-10 glass-header">
           <div className="flex items-center gap-4 md:hidden">
-            <img src="/naka-logo.svg" alt="Naka OS" className="h-5 w-auto" />
+            <OrgLogo logoUrl={session?.orgLogoUrl} orgName={session?.orgName ?? 'Naka OS'} size="sm" isLoading={!isAuthReady} />
           </div>
 
           <div className="hidden md:flex items-center gap-2 bg-white/4 border border-white/6 px-4 py-2 rounded-full w-80 focus-within:border-primary/30 transition-colors">
