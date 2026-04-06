@@ -1,193 +1,147 @@
-import React, { useState } from 'react';
-import { Search, CheckSquare, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { cn } from '../lib/utils';
+import React, { useState, useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { useStore } from '../store';
+import type { TaskViewType } from '../store';
+import { useApp } from '../components/AppProvider';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import { NewTaskModal } from '../components/modals/NewTaskModal';
+import { TaskDetailModal } from '../components/tasks/TaskDetailModal';
+import { TaskViewSelector } from '../components/tasks/TaskViewSelector';
+import { TaskFilters, type TaskFiltersState } from '../components/tasks/TaskFilters';
+import { KanbanViewPanel } from '../components/tasks/KanbanViewPanel';
+import { ListViewPanel, type GroupByOption } from '../components/tasks/ListViewPanel';
+import { CalendarViewPanel } from '../components/tasks/CalendarViewPanel';
+import { TimelineViewPanel } from '../components/tasks/TimelineViewPanel';
+import { BoardByClientViewPanel } from '../components/tasks/BoardByClientViewPanel';
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+const EMPTY_FILTERS: TaskFiltersState = { clientIds: [], projectIds: [], assigneeNames: [] };
 
 export function Tasks() {
   const { t } = useTranslation();
-  const tasks = useStore((state) => state.tasks);
-  const clients = useStore((state) => state.clients);
-  const session = useStore((state) => state.session);
-  const [search, setSearch] = useState('');
+  const { isAuthReady } = useApp();
+
+  const session    = useStore(s => s.session);
+  const tasks      = useStore(s => s.tasks);
+  const clients    = useStore(s => s.clients);
+  const projects   = useStore(s => s.projects);
+  const teamUsers  = useStore(s => s.teamUsers);
+  const updateTask = useStore(s => s.updateTask);
+  const updateTaskView = useStore(s => s.updateTaskView);
+  const updateTaskStatus = useStore(s => s.updateTaskStatus);
+
+  const [activeView, setActiveView] = useState<TaskViewType>(session?.taskView ?? 'kanban');
+  const [filters, setFilters] = useState<TaskFiltersState>(EMPTY_FILTERS);
+  const [groupBy, setGroupBy] = useState<GroupByOption>('none');
   const [showNewTask, setShowNewTask] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const isAdminOrSocio = session?.role === 'admin' || session?.role === 'socio';
-  const today = new Date().toISOString().slice(0, 10);
+  const handleViewChange = async (view: TaskViewType) => {
+    setActiveView(view);
+    updateTaskView(view);
+    try {
+      await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ taskView: view }),
+      });
+    } catch {
+      toast.error('Não foi possível salvar a preferência de visualização', { duration: 2000 });
+    }
+  };
 
-  // Active tasks (not done/archived), respecting role
-  const activeTasks = tasks.filter(t =>
-    t.status !== 'done' &&
-    t.status !== 'archived' &&
-    (isAdminOrSocio || t.assignees?.includes(session?.name ?? ''))
-  );
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      if (filters.clientIds.length > 0 && !filters.clientIds.includes(task.clientId ?? '')) return false;
+      if (filters.projectIds.length > 0 && !filters.projectIds.includes(task.projectId ?? '')) return false;
+      if (filters.assigneeNames.length > 0 && !task.assignees?.some(a => filters.assigneeNames.includes(a))) return false;
+      return true;
+    });
+  }, [tasks, filters]);
 
-  // Today's tasks subset
-  const todayTasks = activeTasks.filter(t => t.dueDate?.startsWith(today));
-  const urgentCount = todayTasks.filter(t => t.priority === 'Urgente').length;
+  const handleTaskClick = (taskId: string) => {
+    setSelectedTaskId(taskId);
+  };
 
-  // Group by clientId — show all clients with active tasks
-  const clientIdsWithTasks = [...new Set(activeTasks.map(t => t.clientId).filter(Boolean))];
+  const handleStatusChange = async (taskId: string, newStatus: Parameters<typeof updateTaskStatus>[1]) => {
+    const prev = tasks.find(t => t.id === taskId)?.status;
+    updateTaskStatus(taskId, newStatus);
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch {
+      if (prev) updateTask(taskId, { status: prev });
+      toast.error('Erro ao atualizar status da tarefa');
+    }
+  };
 
-  const clientsWithTasks = clients
-    .filter(c => clientIdsWithTasks.includes(c.id))
-    .filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  if (!isAuthReady) {
+    return (
+      <div className="space-y-4 max-w-full">
+        <div className="h-10 bg-surface-container rounded-xl animate-pulse w-80" />
+        <div className="h-64 bg-surface-container rounded-xl animate-pulse" />
+      </div>
+    );
+  }
 
-  const getActiveTaskCount = (clientId: string) =>
-    activeTasks.filter(t => t.clientId === clientId).length;
-
-  const getTodayTaskCount = (clientId: string) =>
-    todayTasks.filter(t => t.clientId === clientId).length;
-
-  const hasUrgent = (clientId: string) =>
-    activeTasks.some(t => t.clientId === clientId && t.priority === 'Urgente');
-
-  const dateLabel = new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long'
-  }).format(new Date());
+  const panelProps = { tasks: filteredTasks, clients, projects, teamUsers, onTaskClick: handleTaskClick };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-headline font-bold text-on-surface">{t('tasks.title')}</h1>
-          <p className="text-on-surface-variant mt-1 capitalize">{dateLabel}</p>
-        </div>
+    <div className="space-y-4 max-w-full h-full flex flex-col">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
+        <h1 className="text-2xl font-headline font-bold text-on-surface">{t('tasks.title')}</h1>
         <button
           onClick={() => setShowNewTask(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" />
           {t('task.new')}
         </button>
       </header>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-surface-container-low rounded-2xl p-5 border border-surface-container-high">
-          <h3 className="text-[10px] font-medium text-primary uppercase tracking-wider mb-1">{t('tasks.todayCount').toUpperCase()}</h3>
-          <div className="text-2xl font-headline font-bold text-on-surface">{todayTasks.length}</div>
-        </div>
-        <div className="bg-surface-container-low rounded-2xl p-5 border border-surface-container-high">
-          <h3 className={cn(
-            "text-[10px] font-medium uppercase tracking-wider mb-1",
-            urgentCount > 0 ? "text-error" : "text-on-surface-variant"
-          )}>{t('tasks.urgentCount').toUpperCase()}</h3>
-          <div className="text-2xl font-headline font-bold text-on-surface">{urgentCount}</div>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder={t('tasks.searchPlaceholder')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-container border border-surface-container-high text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary/50 transition-colors"
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-shrink-0">
+        <TaskViewSelector activeView={activeView} onChange={handleViewChange} />
+        <TaskFilters
+          filters={filters}
+          clients={clients}
+          projects={projects}
+          teamUsers={teamUsers}
+          onChange={setFilters}
+          onClear={() => setFilters(EMPTY_FILTERS)}
         />
       </div>
 
-      {/* Client Cards Grid */}
-      {clientsWithTasks.length > 0 ? (
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          {clientsWithTasks.map((client) => {
-            const activeCount = getActiveTaskCount(client.id);
-            const todayCount = getTodayTaskCount(client.id);
-            const urgent = hasUrgent(client.id);
-            return (
-              <motion.div
-                variants={item}
-                key={client.id}
-                className="bg-surface-container-low rounded-2xl border border-surface-container-high p-5 flex flex-col gap-4 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-2xl font-headline font-bold text-on-primary shadow-sm shadow-primary/20">
-                      {client.logo}
-                    </div>
-                    <div>
-                      <h3 className="font-headline font-semibold text-on-surface leading-tight">{client.name}</h3>
-                      <p className="text-xs text-on-surface-variant mt-0.5">{client.industry}</p>
-                    </div>
-                  </div>
-                  {urgent && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 bg-error/10 text-error border-error/20">
-                      {t('tasks.urgentCount')}
-                    </span>
-                  )}
-                </div>
+      <div className="flex-1 min-h-0 overflow-auto">
+        {activeView === 'kanban' && (
+          <KanbanViewPanel {...panelProps} onStatusChange={handleStatusChange} />
+        )}
+        {activeView === 'list' && (
+          <ListViewPanel {...panelProps} groupBy={groupBy} onGroupByChange={setGroupBy} />
+        )}
+        {activeView === 'calendar' && (
+          <CalendarViewPanel {...panelProps} />
+        )}
+        {activeView === 'timeline' && (
+          <TimelineViewPanel {...panelProps} />
+        )}
+        {activeView === 'board-by-client' && (
+          <BoardByClientViewPanel {...panelProps} />
+        )}
+      </div>
 
-                <div className="px-3 py-2 rounded-xl bg-surface-container border border-surface-container-high flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">{t('tasks.tasksLabel')}</span>
-                    <p className="text-sm font-headline font-semibold text-on-surface mt-0.5">
-                      {activeCount} {t('tasks.tasksLabel')}
-                    </p>
-                  </div>
-                  {todayCount > 0 && (
-                    <span className="px-2 py-1 rounded-lg text-[10px] font-medium bg-primary/10 text-primary">
-                      {todayCount} hoje
-                    </span>
-                  )}
-                </div>
+      <NewTaskModal isOpen={showNewTask} onClose={() => setShowNewTask(false)} />
 
-                <Link
-                  to={`/clients/${client.id}/tasks`}
-                  className="w-full text-center py-2 rounded-xl border border-surface-container-high text-sm font-medium text-on-surface-variant hover:text-primary hover:border-primary/50 transition-colors"
-                >
-                  {t('tasks.viewTasks')}
-                </Link>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-surface-container-low rounded-2xl border border-surface-container-high p-12 flex flex-col items-center gap-3"
-        >
-          <CheckSquare className="w-12 h-12 text-on-surface-variant opacity-30" />
-          <p className="text-sm text-on-surface-variant">{t('tasks.noTasksToday')}</p>
-          <button
-            onClick={() => setShowNewTask(true)}
-            className="mt-2 flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            {t('task.new')}
-          </button>
-        </motion.div>
-      )}
-
-      <NewTaskModal
-        isOpen={showNewTask}
-        onClose={() => setShowNewTask(false)}
-      />
+      {selectedTaskId && (() => {
+        const task = tasks.find(t => t.id === selectedTaskId);
+        return task ? (
+          <TaskDetailModal task={task} onClose={() => setSelectedTaskId(null)} />
+        ) : null;
+      })()}
     </div>
   );
 }

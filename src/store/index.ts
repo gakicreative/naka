@@ -12,11 +12,17 @@ async function api(method: string, path: string, body?: unknown) {
   return res.json();
 }
 
+export type TaskViewType = 'kanban' | 'list' | 'calendar' | 'timeline' | 'board-by-client';
+
 export interface UserSession {
   role: 'admin' | 'socio' | 'lider' | 'seeder' | 'cliente';
   name: string;
   email?: string;
   activeClientId?: string;
+  orgId?: string;
+  taskView?: TaskViewType | null;
+  orgLogoUrl?: string | null;
+  orgName?: string;
 }
 
 export interface ClientObjective {
@@ -237,6 +243,7 @@ export interface Task {
   projectId?: string;
   status: 'todo' | 'in-progress' | 'review' | 'done' | 'archived';
   priority: 'Baixa' | 'Média' | 'Alta' | 'Urgente';
+  startDate?: string;
   dueDate: string;
   assignees: string[];
   createdAt?: string;
@@ -367,6 +374,7 @@ interface AppState {
   // Session & Language
   session: UserSession | null;
   setSession: (session: UserSession | null) => void;
+  updateTaskView: (view: TaskViewType) => void;
   language: 'pt-BR' | 'en-US';
   setLanguage: (lang: 'pt-BR' | 'en-US') => void;
 
@@ -415,6 +423,7 @@ export const useStore = create<AppState>()(
       session: null,
       language: 'pt-BR',
       setSession: (session) => set({ session }),
+      updateTaskView: (view) => set(s => ({ session: s.session ? { ...s.session, taskView: view } : s.session })),
       setLanguage: (language) => set({ language }),
 
       addPin: async (pin) => {
