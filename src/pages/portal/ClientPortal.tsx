@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SwatchBook, CheckSquare, Package, LogOut, Plus, Star } from 'lucide-react';
+import { OrgLogo } from '../../components/OrgLogo';
 import { cn } from '../../lib/utils';
 import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
@@ -109,9 +110,7 @@ export function ClientPortal() {
       {/* Portal Header */}
       <header className="h-16 flex items-center justify-between px-6 bg-surface/80 backdrop-blur-md sticky top-0 z-10 border-b border-surface-container-low">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-headline font-bold">
-            DA
-          </div>
+          <OrgLogo logoUrl={session?.orgLogoUrl} orgName={session?.orgName ?? ''} size="md" />
           <div>
             <p className="text-sm font-semibold text-on-surface leading-none">{t('portal.title')}</p>
             {client && (
