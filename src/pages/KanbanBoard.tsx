@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { NewTaskModal } from '../components/modals/NewTaskModal';
+import { TaskDetailModal } from '../components/tasks/TaskDetailModal';
 import { useTranslation } from 'react-i18next';
 
 const MOCK_USER = { uid: 'local-user', displayName: 'Yuri', photoURL: null };
@@ -1511,9 +1512,8 @@ export function KanbanBoard() {
   const [activeTab, setActiveTab] = useState('criacao-conteudo');
   const [activeFilter, setActiveFilter] = useState('Todas');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [focusChat, setFocusChat] = useState(false);
-  const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
 
   const tasks = useStore((state) => state.tasks);
@@ -1929,10 +1929,10 @@ export function KanbanBoard() {
                   <TaskCard
                     key={task.id}
                     task={task}
-                    onClick={() => setSelectedTask(task)}
+                    onClick={() => setSelectedTaskId(task.id)}
                     onCommentClick={(e) => {
                       e.stopPropagation();
-                      setSelectedTask(task);
+                      setSelectedTaskId(task.id);
                       setFocusChat(true);
                     }}
                     onComplete={() => {
@@ -1967,23 +1967,17 @@ export function KanbanBoard() {
       </div>
       )}
 
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          onClose={() => { setSelectedTask(null); setFocusChat(false); }}
-          onOpenFeedback={(url) => setFeedbackImage(url)}
-          focusChat={focusChat}
-          projectId={currentProjectId || undefined}
-        />
-      )}
-
-      {feedbackImage && selectedTask && (
-        <VisualFeedbackModal 
-          taskId={selectedTask.id}
-          imageUrl={feedbackImage} 
-          onClose={() => setFeedbackImage(null)} 
-        />
-      )}
+      {selectedTaskId && (() => {
+        const storeTask = tasks.find(t => t.id === selectedTaskId);
+        return storeTask ? (
+          <TaskDetailModal
+            task={storeTask}
+            onClose={() => { setSelectedTaskId(null); setFocusChat(false); }}
+            focusChat={focusChat}
+            projectId={currentProjectId || undefined}
+          />
+        ) : null;
+      })()}
 
       <NewTaskModal
         isOpen={isNewTaskModalOpen}

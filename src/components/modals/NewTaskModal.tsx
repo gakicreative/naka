@@ -18,10 +18,20 @@ export function NewTaskModal({ isOpen, onClose, clientId, projectId }: NewTaskMo
   const [priority, setPriority] = useState<'Baixa' | 'Média' | 'Alta' | 'Urgente'>('Média');
   const [selectedClientId, setSelectedClientId] = useState(clientId || '');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [dueDate, setDueDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
 
   const clients = useStore((s) => s.clients);
   const projects = useStore((s) => s.projects);
+  const teamUsers = useStore((s) => s.teamUsers);
   const addTask = useStore((s) => s.addTask);
+
+  const toggleAssignee = (name: string) => {
+    setSelectedAssignees(prev =>
+      prev.includes(name) ? prev.filter(a => a !== name) : [...prev, name]
+    );
+  };
 
   if (!isOpen) return null;
 
@@ -40,11 +50,11 @@ export function NewTaskModal({ isOpen, onClose, clientId, projectId }: NewTaskMo
         priority,
         clientId: selectedClientId,
         projectId: selectedProjectId,
+        dueDate,
+        startDate: startDate || undefined,
         createdAt: new Date().toISOString(),
-        assignees: [],
+        assignees: selectedAssignees,
         labels: [],
-        comments: [],
-        attachments: [],
       };
 
       await addTask(newTask);
@@ -52,6 +62,9 @@ export function NewTaskModal({ isOpen, onClose, clientId, projectId }: NewTaskMo
       onClose();
       setTitle('');
       setDescription('');
+      setDueDate('');
+      setStartDate('');
+      setSelectedAssignees([]);
     } catch (error) {
       console.error('Erro ao criar tarefa:', error);
       toast.error(t('task.errorCreate'));
@@ -132,6 +145,53 @@ export function NewTaskModal({ isOpen, onClose, clientId, projectId }: NewTaskMo
               <option value="Urgente">Urgente</option>
             </select>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-1">Data de início</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-1">Prazo</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-4 py-2 bg-surface-variant border-none rounded-xl focus:ring-2 focus:ring-primary text-on-surface"
+              />
+            </div>
+          </div>
+
+          {teamUsers.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-2">Responsáveis</label>
+              <div className="flex flex-wrap gap-2">
+                {teamUsers.map(user => {
+                  const name = user.name || user.email;
+                  const selected = selectedAssignees.includes(name);
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => toggleAssignee(name)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        selected
+                          ? 'bg-primary text-on-primary'
+                          : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/70'
+                      }`}
+                    >
+                      <span>{name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <button
