@@ -1,12 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useStore } from '../store';
-import {
-  MOCK_SESSION, MOCK_CLIENTS, MOCK_PROJECTS, MOCK_TASKS,
-  MOCK_LABELS, MOCK_TRANSACTIONS, MOCK_NOTIFICATIONS, MOCK_BRANDHUBS,
-  MOCK_TEAM_USERS, MOCK_FEEDBACKS,
-} from '../lib/mockData';
-
-const MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
 const USER_NAME_KEY = 'nakaos-user-name';
 
@@ -51,28 +44,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserNameState(trimmed);
   };
 
-  // Mock mode: bypass API entirely
   useEffect(() => {
-    if (!MOCK) return;
-    setSession(MOCK_SESSION);
-    setClients(MOCK_CLIENTS);
-    setProjects(MOCK_PROJECTS);
-    setTasks(MOCK_TASKS);
-    setTransactions(MOCK_TRANSACTIONS);
-    setLabels(MOCK_LABELS);
-    setNotifications(MOCK_NOTIFICATIONS);
-    setBrandHubs(MOCK_BRANDHUBS);
-    setPins([]);
-    setFeedbacks(MOCK_FEEDBACKS);
-    setTeamUsers(MOCK_TEAM_USERS);
-    setUserName(MOCK_SESSION.name);
-    setIsAuthReady(true);
-  }, []);
-
-  // API mode: check JWT session + fetch all data
-  useEffect(() => {
-    if (MOCK) return;
-
     async function init() {
       try {
         const meRes = await fetch('/api/auth/me', { credentials: 'include' });

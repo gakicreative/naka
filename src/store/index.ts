@@ -322,7 +322,6 @@ export interface TeamUser {
 }
 
 const genId = () => crypto.randomUUID();
-const MOCK = import.meta.env.VITE_MOCK_MODE === 'true';
 
 interface AppState {
   clients: Client[];
@@ -429,29 +428,24 @@ export const useStore = create<AppState>()(
       addPin: async (pin) => {
         const id = genId();
         const newPin = { ...pin, id, createdAt: new Date().toISOString() };
-        if (MOCK) { set(s => ({ pins: [...s.pins, newPin] })); return; }
         await api('POST', '/api/pins', newPin);
         set(s => ({ pins: [...s.pins, newPin] }));
       },
       updatePin: async (id, data) => {
-        if (MOCK) { set(s => ({ pins: s.pins.map(p => p.id === id ? { ...p, ...data } : p) })); return; }
         await api('PATCH', `/api/pins/${id}`, data);
         set(s => ({ pins: s.pins.map(p => p.id === id ? { ...p, ...data } : p) }));
       },
       deletePin: async (id) => {
-        if (MOCK) { set(s => ({ pins: s.pins.filter(p => p.id !== id) })); return; }
         await api('DELETE', `/api/pins/${id}`);
         set(s => ({ pins: s.pins.filter(p => p.id !== id) }));
       },
 
       readNotificationIds: [],
       markNotificationAsRead: async (id) => {
-        if (MOCK) { set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) })); return; }
         await api('PATCH', `/api/notifications/${id}`, { read: true });
         set(s => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) }));
       },
       clearNotifications: async () => {
-        if (MOCK) { set({ notifications: [] }); return; }
         const notifications = get().notifications;
         await Promise.all(notifications.map(n => api('DELETE', `/api/notifications/${n.id}`)));
         set({ notifications: [] });
@@ -461,24 +455,15 @@ export const useStore = create<AppState>()(
       addLabel: async (label) => {
         const id = genId();
         const newLabel = { ...label, id };
-        if (MOCK) { set(s => ({ labels: [...s.labels, newLabel] })); return; }
         await api('POST', '/api/labels', newLabel);
         set(s => ({ labels: [...s.labels, newLabel] }));
       },
       updateLabel: async (id, label) => {
-        if (MOCK) { set(s => ({ labels: s.labels.map(l => l.id === id ? { ...l, ...label } : l) })); return; }
         await api('PATCH', `/api/labels/${id}`, label);
         set(s => ({ labels: s.labels.map(l => l.id === id ? { ...l, ...label } : l) }));
       },
       deleteLabel: async (id) => {
         const tasks = get().tasks;
-        if (MOCK) {
-          set(s => ({
-            labels: s.labels.filter(l => l.id !== id),
-            tasks: s.tasks.map(t => t.tags?.includes(id) ? { ...t, tags: t.tags.filter(tag => tag !== id) } : t),
-          }));
-          return;
-        }
         await api('DELETE', `/api/labels/${id}`);
         set(s => ({ labels: s.labels.filter(l => l.id !== id) }));
         await Promise.all(
@@ -496,23 +481,19 @@ export const useStore = create<AppState>()(
       addFeedback: async (feedback) => {
         const id = genId();
         const newFeedback: Feedback = { ...feedback, id, createdAt: new Date().toISOString() };
-        if (MOCK) { set(s => ({ feedbacks: [...s.feedbacks, newFeedback] })); return; }
         await api('POST', '/api/feedbacks', newFeedback);
         set(s => ({ feedbacks: [...s.feedbacks, newFeedback] }));
       },
       updateFeedback: async (id, data) => {
-        if (MOCK) { set(s => ({ feedbacks: s.feedbacks.map(f => f.id === id ? { ...f, ...data } : f) })); return; }
         await api('PATCH', `/api/feedbacks/${id}`, data);
         set(s => ({ feedbacks: s.feedbacks.map(f => f.id === id ? { ...f, ...data } : f) }));
       },
       deleteFeedback: async (id) => {
-        if (MOCK) { set(s => ({ feedbacks: s.feedbacks.filter(f => f.id !== id) })); return; }
         await api('DELETE', `/api/feedbacks/${id}`);
         set(s => ({ feedbacks: s.feedbacks.filter(f => f.id !== id) }));
       },
       setTeamUsers: (teamUsers) => set({ teamUsers }),
       updateTeamUser: async (id, leaderId) => {
-        if (MOCK) { set(s => ({ teamUsers: s.teamUsers.map(u => u.id === id ? { ...u, leaderId: leaderId ?? undefined } : u) })); return; }
         await api('PATCH', `/api/team/${id}`, { leaderId });
         set(s => ({ teamUsers: s.teamUsers.map(u => u.id === id ? { ...u, leaderId: leaderId ?? undefined } : u) }));
       },
@@ -527,17 +508,14 @@ export const useStore = create<AppState>()(
       addClient: async (client) => {
         const id = genId();
         const newClient = { ...client, id };
-        if (MOCK) { set(s => ({ clients: [...s.clients, newClient] })); return; }
         await api('POST', '/api/clients', newClient);
         set(s => ({ clients: [...s.clients, newClient] }));
       },
       updateClient: async (id, client) => {
-        if (MOCK) { set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...client } : c) })); return; }
         await api('PATCH', `/api/clients/${id}`, client);
         set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...client } : c) }));
       },
       deleteClient: async (id) => {
-        if (MOCK) { set(s => ({ clients: s.clients.filter(c => c.id !== id) })); return; }
         await api('DELETE', `/api/clients/${id}`);
         set(s => ({ clients: s.clients.filter(c => c.id !== id) }));
       },
@@ -545,17 +523,14 @@ export const useStore = create<AppState>()(
       addProject: async (project) => {
         const id = genId();
         const newProject = { ...project, id };
-        if (MOCK) { set(s => ({ projects: [...s.projects, newProject] })); return; }
         await api('POST', '/api/projects', newProject);
         set(s => ({ projects: [...s.projects, newProject] }));
       },
       updateProject: async (id, project) => {
-        if (MOCK) { set(s => ({ projects: s.projects.map(p => p.id === id ? { ...p, ...project } : p) })); return; }
         await api('PATCH', `/api/projects/${id}`, project);
         set(s => ({ projects: s.projects.map(p => p.id === id ? { ...p, ...project } : p) }));
       },
       deleteProject: async (id) => {
-        if (MOCK) { set(s => ({ projects: s.projects.filter(p => p.id !== id) })); return; }
         await api('DELETE', `/api/projects/${id}`);
         set(s => ({ projects: s.projects.filter(p => p.id !== id) }));
       },
@@ -563,22 +538,18 @@ export const useStore = create<AppState>()(
       addTask: async (task) => {
         const id = genId();
         const newTask = { ...task, id };
-        if (MOCK) { set(s => ({ tasks: [...s.tasks, newTask] })); return; }
         await api('POST', '/api/tasks', newTask);
         set(s => ({ tasks: [...s.tasks, newTask] }));
       },
       updateTask: async (id, task) => {
-        if (MOCK) { set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, ...task } : t) })); return; }
         await api('PATCH', `/api/tasks/${id}`, task);
         set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, ...task } : t) }));
       },
       deleteTask: async (id) => {
-        if (MOCK) { set(s => ({ tasks: s.tasks.filter(t => t.id !== id) })); return; }
         await api('DELETE', `/api/tasks/${id}`);
         set(s => ({ tasks: s.tasks.filter(t => t.id !== id) }));
       },
       updateTaskStatus: async (taskId, newStatus) => {
-        if (MOCK) { set(s => ({ tasks: s.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t) })); return; }
         await api('PATCH', `/api/tasks/${taskId}`, { status: newStatus });
         set(s => ({ tasks: s.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t) }));
       },
@@ -586,17 +557,14 @@ export const useStore = create<AppState>()(
       addTransaction: async (tx) => {
         const id = genId();
         const newTx = { ...tx, id };
-        if (MOCK) { set(s => ({ transactions: [...s.transactions, newTx] })); return; }
         await api('POST', '/api/transactions', newTx);
         set(s => ({ transactions: [...s.transactions, newTx] }));
       },
       updateTransaction: async (id, tx) => {
-        if (MOCK) { set(s => ({ transactions: s.transactions.map(t => t.id === id ? { ...t, ...tx } : t) })); return; }
         await api('PATCH', `/api/transactions/${id}`, tx);
         set(s => ({ transactions: s.transactions.map(t => t.id === id ? { ...t, ...tx } : t) }));
       },
       deleteTransaction: async (id) => {
-        if (MOCK) { set(s => ({ transactions: s.transactions.filter(t => t.id !== id) })); return; }
         await api('DELETE', `/api/transactions/${id}`);
         set(s => ({ transactions: s.transactions.filter(t => t.id !== id) }));
       },
@@ -604,7 +572,6 @@ export const useStore = create<AppState>()(
       upsertBrandHub: async (hub) => {
         const id = hub.id ?? (hub.clientId ?? hub.projectId ?? crypto.randomUUID());
         const fullHub = { ...hub, id };
-        if (MOCK) { set(s => ({ brandhubs: [...s.brandhubs.filter(b => b.id !== id), fullHub] })); return; }
         try {
           await api('PATCH', `/api/brandhubs/${id}`, fullHub);
         } catch {
@@ -613,12 +580,10 @@ export const useStore = create<AppState>()(
         set(s => ({ brandhubs: [...s.brandhubs.filter(b => b.id !== id), fullHub] }));
       },
       updateBrandHub: async (id, hub) => {
-        if (MOCK) { set(s => ({ brandhubs: s.brandhubs.map(b => b.id === id ? { ...b, ...hub } : b) })); return; }
         await api('PATCH', `/api/brandhubs/${id}`, hub);
         set(s => ({ brandhubs: s.brandhubs.map(b => b.id === id ? { ...b, ...hub } : b) }));
       },
       deleteBrandHub: async (id) => {
-        if (MOCK) { set(s => ({ brandhubs: s.brandhubs.filter(b => b.id !== id) })); return; }
         await api('DELETE', `/api/brandhubs/${id}`);
         set(s => ({ brandhubs: s.brandhubs.filter(b => b.id !== id) }));
       },

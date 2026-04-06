@@ -55,11 +55,11 @@ export default defineConfig(({mode}) => {
      hmr: process.env.DISABLE_HMR !== 'true',
      proxy: {
        '/api': {
-         target: 'http://localhost:3001',
+         target: 'http://localhost:8787',
          changeOrigin: true,
        },
        '/uploads': {
-         target: 'http://localhost:3001',
+         target: 'http://localhost:8787',
          changeOrigin: true,
        },
      },

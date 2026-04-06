@@ -2,29 +2,28 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Vite Dev Server (Mock)",
+      "name": "Dev Full (Vite + Wrangler)",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000,
-      "env": { "VITE_MOCK_MODE": "true" }
-    },
-    {
-      "name": "Vite Dev Server (Production)",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--mode", "production"],
+      "runtimeArgs": ["run", "dev:full"],
       "port": 3000
     },
     {
-      "name": "Vite Preview",
+      "name": "Vite Dev Server",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview"],
-      "port": 4173
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
     },
     {
       "name": "Wrangler Worker",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:worker"],
       "port": 8787
+    },
+    {
+      "name": "Vite Preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4173
     }
   ]
 }
