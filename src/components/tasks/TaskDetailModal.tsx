@@ -759,7 +759,7 @@ export function TaskDetailModal({ task, onClose, focusChat, projectId }: {
                                   </div>
                                 </div>
                               )}
-                              <Link to={`/brand-hub/${brandHub.id}`} className="inline-flex items-center gap-1.5 text-xs text-[#b7c4ff] hover:underline">
+                              <Link to={`/app/brand-hub/${brandHub.id}`} className="inline-flex items-center gap-1.5 text-xs text-[#b7c4ff] hover:underline">
                                 <FolderHeart className="w-3.5 h-3.5" />
                                 Abrir Brand Hub completo
                               </Link>

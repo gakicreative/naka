@@ -7,7 +7,11 @@
       "Bash(npm run:*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(npx wrangler:*)",
-      "Bash(npx cc-sdd@latest)"
+      "Bash(npx cc-sdd@latest)",
+      "Bash(npx tsc:*)",
+      "mcp__79122571-8c14-45f4-8b24-a86b68c857e4__workers_list",
+      "mcp__79122571-8c14-45f4-8b24-a86b68c857e4__workers_get_worker",
+      "Bash(npm install:*)"
     ]
   }
 }

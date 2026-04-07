@@ -435,7 +435,7 @@ function BrandTab({ projectId }: { projectId: string }) {
         <BrandCard hub={hub} />
       </div>
       <Link
-        to={`/brand-hub/${hub.id}`}
+        to={`/app/brand-hub/${hub.id}`}
         className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container border border-surface-container-high rounded-xl text-sm text-on-surface hover:border-primary/50 transition-colors"
       >
         <ExternalLink className="w-4 h-4 text-on-surface-variant" /> Abrir Brand Hub completo
@@ -501,7 +501,7 @@ function KanbanTab({ projectId }: { projectId: string }) {
       )}
 
       <Link
-        to={`/projects/${projectId}/tasks`}
+        to={`/app/projects/${projectId}/tasks`}
         className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors"
       >
         <Kanban className="w-4 h-4" /> Abrir Kanban completo
@@ -690,7 +690,7 @@ export function ProjectDetail() {
     return (
       <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-on-surface-variant">
         <p>Projeto não encontrado.</p>
-        <button onClick={() => navigate('/projects')} className="text-primary hover:underline text-sm">← Voltar</button>
+        <button onClick={() => navigate('/app/projects')} className="text-primary hover:underline text-sm">← Voltar</button>
       </div>
     );
   }
@@ -705,7 +705,7 @@ export function ProjectDetail() {
           <p className="font-semibold text-on-surface">Acesso restrito</p>
           <p className="text-sm mt-1">Você não tem permissão para visualizar este projeto.</p>
         </div>
-        <button onClick={() => navigate('/projects')} className="text-primary hover:underline text-sm">← Voltar para projetos</button>
+        <button onClick={() => navigate('/app/projects')} className="text-primary hover:underline text-sm">← Voltar para projetos</button>
       </div>
     );
   }
@@ -714,7 +714,7 @@ export function ProjectDetail() {
     if (!confirm(`Excluir "${project.name}"? Esta ação não pode ser desfeita.`)) return;
     await deleteProject(project.id);
     toast.success('Projeto excluído.');
-    navigate('/projects');
+    navigate('/app/projects');
   };
 
   const [editingProgress, setEditingProgress] = useState(false);
@@ -724,7 +724,7 @@ export function ProjectDetail() {
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Back */}
       <button
-        onClick={() => navigate('/projects')}
+        onClick={() => navigate('/app/projects')}
         className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar

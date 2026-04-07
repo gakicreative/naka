@@ -177,7 +177,7 @@ router.get('/google/callback', async (c) => {
         await db.update(users).set({ orgId }).where(eq(users.id, byGoogleId.id));
       }
       await setToken(c, byGoogleId.id, byGoogleId.role, orgId);
-      return c.redirect(byGoogleId.role === 'cliente' ? '/portal' : '/');
+      return c.redirect(byGoogleId.role === 'cliente' ? '/portal' : '/app');
     }
 
     // 2. Usuário existente pelo email → vincula google_id
@@ -191,7 +191,7 @@ router.get('/google/callback', async (c) => {
         await db.update(users).set({ googleId }).where(eq(users.id, byEmail.id));
       }
       await setToken(c, byEmail.id, byEmail.role, orgId);
-      return c.redirect(byEmail.role === 'cliente' ? '/portal' : '/');
+      return c.redirect(byEmail.role === 'cliente' ? '/portal' : '/app');
     }
 
     // 3. Novo usuário — verifica se é o admin ou se tem convite
@@ -223,7 +223,7 @@ router.get('/google/callback', async (c) => {
     }
 
     await setToken(c, id, role, orgId);
-    return c.redirect(role === 'cliente' ? '/portal' : '/');
+    return c.redirect(role === 'cliente' ? '/portal' : '/app');
 
   } catch (err) {
     console.error('[Google Callback] Erro:', err);

@@ -56,7 +56,7 @@ export function Projects() {
       >
         {projects.map((project) => (
           <motion.div key={project.id} variants={item}>
-            <Link to={`/projects/${project.id}`} className="bg-surface-container-low border border-surface-container-high rounded-2xl p-5 hover:border-primary/50 transition-colors cursor-pointer flex flex-col gap-4 group">
+            <Link to={`/app/projects/${project.id}`} className="bg-surface-container-low border border-surface-container-high rounded-2xl p-5 hover:border-primary/50 transition-colors cursor-pointer flex flex-col gap-4 group">
             <div className="flex items-start justify-between">
               <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-lg font-bold text-on-surface group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                 {project.name.charAt(0).toUpperCase()}

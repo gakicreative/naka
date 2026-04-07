@@ -65,7 +65,7 @@ export function Register() {
   // Redireciona se já logado
   useEffect(() => {
     if (isAuthReady && session) {
-      navigate(session.role === 'cliente' ? '/portal' : '/');
+      navigate(session.role === 'cliente' ? '/portal' : '/app');
     }
   }, [isAuthReady, session, navigate]);
 

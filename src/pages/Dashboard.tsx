@@ -139,7 +139,7 @@ export function Dashboard() {
                 <AlertCircle className="w-5 h-5 text-error" />
                 {t('dashboard.priorityTasks')}
               </h2>
-              <Link to="/tasks" className="text-sm text-primary hover:underline font-medium">{t('common.viewAll')}</Link>
+              <Link to="/app/tasks" className="text-sm text-primary hover:underline font-medium">{t('common.viewAll')}</Link>
             </div>
             <div className="space-y-3">
               {urgentTasks.length > 0 ? urgentTasks.map((task) => (
@@ -166,11 +166,11 @@ export function Dashboard() {
           <div className="glass-card rounded-3xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-headline font-semibold text-on-surface">{t('dashboard.featuredProjects')}</h2>
-              <Link to="/projects" className="text-sm text-primary hover:underline font-medium">{t('common.viewAll')}</Link>
+              <Link to="/app/projects" className="text-sm text-primary hover:underline font-medium">{t('common.viewAll')}</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {featuredProjects.map((project) => (
-                <Link to={`/projects/${project.id}`} key={project.id} className="p-4 rounded-2xl border border-surface-container-high bg-surface-container-lowest hover:border-primary/50 transition-colors group">
+                <Link to={`/app/projects/${project.id}`} key={project.id} className="p-4 rounded-2xl border border-surface-container-high bg-surface-container-lowest hover:border-primary/50 transition-colors group">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-lg font-bold text-on-surface group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                       {project.name.charAt(0).toUpperCase()}
@@ -214,7 +214,7 @@ export function Dashboard() {
           <div className="glass-card rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-headline font-semibold text-on-surface">{t('dashboard.receivables')}</h2>
-              <Link to="/finances" className="text-sm text-primary hover:underline font-medium">{t('nav.finances')}</Link>
+              <Link to="/app/finances" className="text-sm text-primary hover:underline font-medium">{t('nav.finances')}</Link>
             </div>
             <div className="space-y-3">
               {pendingInvoices.slice(0, 4).map((invoice) => {

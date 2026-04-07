@@ -16,7 +16,7 @@ export function BrandCard({ hub }: Props) {
 
   return (
     <button
-      onClick={() => navigate(`/brand-hub/${hub.id}`)}
+      onClick={() => navigate(`/app/brand-hub/${hub.id}`)}
       className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-[28px]"
     >
       <div

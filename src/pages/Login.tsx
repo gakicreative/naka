@@ -131,7 +131,7 @@ export function Login() {
   useEffect(() => {
     if (isAuthReady && session) {
       sessionStorage.removeItem(SESSION_INVITE_KEY);
-      navigate(session.role === 'cliente' ? '/portal' : '/');
+      navigate(session.role === 'cliente' ? '/portal' : '/app');
     }
   }, [isAuthReady, session, navigate]);
 

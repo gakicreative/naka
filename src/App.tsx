@@ -19,6 +19,7 @@ import { ClientDetail } from './pages/ClientDetail';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Finances } from './pages/Finances';
 import { Team } from './pages/Team';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ClientPortal } from './pages/portal/ClientPortal';
@@ -34,6 +35,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {/* Public */}
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -48,7 +50,7 @@ export default function App() {
           />
 
           {/* App Shell */}
-          <Route path="/" element={
+          <Route path="/app" element={
             <RoleGuard allow={['admin', 'socio', 'seeder']} redirectTo="/login">
               <Layout />
             </RoleGuard>

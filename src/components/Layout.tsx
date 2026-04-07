@@ -18,14 +18,14 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { iconName: 'solar:home-2-linear',                 labelKey: 'nav.home',      path: '/',          roles: ['admin', 'socio', 'lider', 'seeder'] },
-  { iconName: 'solar:users-group-rounded-linear',    labelKey: 'nav.clients',   path: '/clients',   roles: ['admin', 'socio', 'lider', 'seeder'] },
-  { iconName: 'solar:checklist-minimalistic-linear', labelKey: 'nav.tasks',     path: '/tasks',     roles: ['admin', 'socio', 'lider', 'seeder'] },
-  { iconName: 'solar:palette-linear',                labelKey: 'nav.brandHub',  path: '/brand-hub', roles: ['admin', 'socio', 'lider', 'seeder'] },
-  { iconName: 'solar:wallet-linear',                 labelKey: 'nav.finances',  path: '/finances',  roles: ['admin'] },
-  { iconName: 'solar:chart-linear',                  labelKey: 'nav.team',      path: '/team',      roles: ['admin'] },
-  { iconName: 'solar:folder-linear',                 labelKey: 'nav.projects',  path: '/projects',  roles: ['admin', 'socio', 'lider', 'seeder'] },
-  { iconName: 'solar:settings-linear',               labelKey: 'nav.settings',  path: '/settings',  roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:home-2-linear',                 labelKey: 'nav.home',      path: '/app',          roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:users-group-rounded-linear',    labelKey: 'nav.clients',   path: '/app/clients',   roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:checklist-minimalistic-linear', labelKey: 'nav.tasks',     path: '/app/tasks',     roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:palette-linear',                labelKey: 'nav.brandHub',  path: '/app/brand-hub', roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:wallet-linear',                 labelKey: 'nav.finances',  path: '/app/finances',  roles: ['admin'] },
+  { iconName: 'solar:chart-linear',                  labelKey: 'nav.team',      path: '/app/team',      roles: ['admin'] },
+  { iconName: 'solar:folder-linear',                 labelKey: 'nav.projects',  path: '/app/projects',  roles: ['admin', 'socio', 'lider', 'seeder'] },
+  { iconName: 'solar:settings-linear',               labelKey: 'nav.settings',  path: '/app/settings',  roles: ['admin', 'socio', 'lider', 'seeder'] },
 ];
 
 
@@ -70,7 +70,7 @@ export function Layout() {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/'}
+              end={item.path === '/app'}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm",
@@ -181,7 +181,7 @@ export function Layout() {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/'}
+            end={item.path === '/app'}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center gap-1 p-2 rounded-xl min-w-[48px]",

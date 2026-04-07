@@ -88,7 +88,7 @@ export function Clients() {
         {clients.map((client) => (
           <motion.div key={client.id} variants={item}>
             <Link 
-              to={`/clients/${client.id}`}
+              to={`/app/clients/${client.id}`}
               className="group block bg-surface-container-low rounded-3xl p-6 border border-surface-container-high hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5 relative overflow-hidden"
             >
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">

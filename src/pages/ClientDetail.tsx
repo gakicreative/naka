@@ -871,7 +871,7 @@ function ClientKanbanTab({ clientId }: { clientId: string }) {
       )}
 
       <Link
-        to={`/clients/${clientId}/tasks`}
+        to={`/app/clients/${clientId}/tasks`}
         className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors"
       >
         Ver todas as tarefas
@@ -931,7 +931,7 @@ function ClientBrandTab({ clientId }: { clientId: string }) {
         <BrandCard hub={hub} />
       </div>
       <Link
-        to={`/brand-hub/${hub.id}`}
+        to={`/app/brand-hub/${hub.id}`}
         className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container border border-surface-container-high rounded-xl text-sm text-on-surface hover:border-primary/50 transition-colors"
       >
         <ExternalLink className="w-4 h-4 text-on-surface-variant" /> Abrir Brand Hub completo
@@ -971,7 +971,7 @@ export function ClientDetail() {
     return (
       <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-on-surface-variant">
         <p>Cliente não encontrado.</p>
-        <button onClick={() => navigate('/clients')} className="text-primary hover:underline text-sm">← Voltar</button>
+        <button onClick={() => navigate('/app/clients')} className="text-primary hover:underline text-sm">← Voltar</button>
       </div>
     );
   }
@@ -980,14 +980,14 @@ export function ClientDetail() {
     if (!confirm(`Excluir "${client.name}"? Esta ação não pode ser desfeita.`)) return;
     await deleteClient(client.id);
     toast.success('Cliente excluído.');
-    navigate('/clients');
+    navigate('/app/clients');
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Back */}
       <button
-        onClick={() => navigate('/clients')}
+        onClick={() => navigate('/app/clients')}
         className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar

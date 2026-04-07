@@ -637,7 +637,7 @@ export function BrandHubDetail() {
     return (
       <div className="max-w-7xl mx-auto py-24 flex flex-col items-center gap-4 text-on-surface-variant">
         <p>Brand Hub não encontrado.</p>
-        <button onClick={() => navigate('/brand-hub')} className="text-primary hover:underline text-sm">← Voltar</button>
+        <button onClick={() => navigate('/app/brand-hub')} className="text-primary hover:underline text-sm">← Voltar</button>
       </div>
     );
   }
@@ -646,7 +646,7 @@ export function BrandHubDetail() {
     if (!confirm(`Excluir "${hub.brandName}"? Esta ação não pode ser desfeita.`)) return;
     await deleteBrandHub(hub.id);
     toast.success('Brand Hub excluído.');
-    navigate('/brand-hub');
+    navigate('/app/brand-hub');
   };
 
   const saveHeader = () => {
@@ -659,7 +659,7 @@ export function BrandHubDetail() {
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Back */}
       <button
-        onClick={() => navigate('/brand-hub')}
+        onClick={() => navigate('/app/brand-hub')}
         className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar
