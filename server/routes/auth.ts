@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getDb, users, invitations, organizations } from '../db.js';
 import { requireAuth, setToken, clearToken } from '../auth.js';
 import type { Env } from '../types.js';
@@ -28,7 +28,7 @@ router.post('/login', async (c) => {
     const { email, password } = await c.req.json<{ email: string; password: string }>();
     if (!email || !password) return c.json({ error: 'Email e senha obrigatórios' }, 400);
 
-    const db     = getDb(c.env.DB);
+    const db     = getDb();
     const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase().trim()));
     if (!user) return c.json({ error: 'Email ou senha incorretos' }, 401);
     if (!user.passwordHash) return c.json({ error: 'Esta conta usa login com Google. Use o botão "Entrar com Google".' }, 401);
@@ -61,14 +61,14 @@ router.post('/register', async (c) => {
     if (password.length < 6) return c.json({ error: 'Senha deve ter pelo menos 6 caracteres' }, 400);
 
     const normalizedEmail = email.toLowerCase().trim();
-    const db              = getDb(c.env.DB);
-    const ADMIN_EMAIL     = c.env.ADMIN_EMAIL || 'admin@naka.app';
+    const db              = getDb();
+    const ADMIN_EMAIL     = process.env.ADMIN_EMAIL || 'admin@naka.app';
 
     const [existing] = await db.select().from(users).where(eq(users.email, normalizedEmail));
     if (existing) return c.json({ error: 'Email já cadastrado' }, 409);
 
-    const countResult = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
-    const count       = countResult?.count ?? 0;
+    const countResult = await db.select({ count: sql<number>`count(*)` }).from(users);
+    const count       = Number(countResult[0]?.count ?? 0);
 
     const id           = crypto.randomUUID();
     const passwordHash = await bcrypt.hash(password, 12);
@@ -110,8 +110,8 @@ router.post('/logout', (c) => {
 
 // ── GET /api/auth/google — redireciona para o Google OAuth ────────────────────
 router.get('/google', (c) => {
-  const clientId    = c.env.GOOGLE_CLIENT_ID;
-  const callbackUrl = c.env.GOOGLE_CALLBACK_URL || 'http://localhost:8787/api/auth/google/callback';
+  const clientId    = process.env.GOOGLE_CLIENT_ID;
+  const callbackUrl = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
   const inviteId    = c.req.query('invite') || '';
 
   if (!clientId) return c.redirect('/login?error=oauth_not_configured');
@@ -138,9 +138,9 @@ router.get('/google/callback', async (c) => {
   if (error || !code) return c.redirect('/login?error=oauth_failed');
 
   try {
-    const clientId     = c.env.GOOGLE_CLIENT_ID;
-    const clientSecret = c.env.GOOGLE_CLIENT_SECRET;
-    const callbackUrl  = c.env.GOOGLE_CALLBACK_URL || 'http://localhost:8787/api/auth/google/callback';
+    const clientId     = process.env.GOOGLE_CLIENT_ID!;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const callbackUrl  = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
 
     // Troca o código por tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -166,7 +166,7 @@ router.get('/google/callback', async (c) => {
       try { inviteId = JSON.parse(atob(stateRaw)).inviteId; } catch { /* ignora */ }
     }
 
-    const db = getDb(c.env.DB);
+    const db = getDb();
 
     // 1. Usuário existente por google_id
     const [byGoogleId] = await db.select().from(users).where(eq(users.googleId, googleId));
@@ -195,11 +195,11 @@ router.get('/google/callback', async (c) => {
     }
 
     // 3. Novo usuário — verifica se é o admin ou se tem convite
-    const ADMIN_EMAIL = (c.env.ADMIN_EMAIL || 'admin@naka.app').toLowerCase();
+    const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@naka.app').toLowerCase();
     const isAdminEmail = email === ADMIN_EMAIL;
 
-    const countResult = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
-    const isFirstUser = (countResult?.count ?? 0) === 0;
+    const countResult = await db.select({ count: sql<number>`count(*)` }).from(users);
+    const isFirstUser = Number(countResult[0]?.count ?? 0) === 0;
 
     const id   = crypto.randomUUID();
     let role   = 'cliente';
@@ -236,7 +236,7 @@ const VALID_TASK_VIEWS = ['kanban', 'list', 'calendar', 'timeline', 'board-by-cl
 // ── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', requireAuth, async (c) => {
   try {
-    const db     = getDb(c.env.DB);
+    const db     = getDb();
     const [user] = await db.select().from(users).where(eq(users.id, c.get('userId')));
     if (!user) return c.json({ error: 'Usuário não encontrado' }, 401);
 
@@ -257,7 +257,7 @@ router.get('/me', requireAuth, async (c) => {
 // ── PATCH /api/auth/me ───────────────────────────────────────────────────────
 router.patch('/me', requireAuth, async (c) => {
   try {
-    const db = getDb(c.env.DB);
+    const db = getDb();
     const body = await c.req.json<{ name?: string; activeClientId?: string; taskView?: string }>();
     const updates: Record<string, unknown> = {};
     if (body.name) updates.name = body.name;

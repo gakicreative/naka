@@ -9,7 +9,7 @@ const router = new Hono<Env>();
 // ── GET /api/invitations/check/:id (pública — sem auth) ───────────────────────
 router.get('/check/:id', async (c) => {
   try {
-    const db     = getDb(c.env.DB);
+    const db     = getDb();
     const [invite] = await db.select().from(invitations).where(eq(invitations.id, c.req.param('id')));
     if (!invite) return c.json({ error: 'Convite não encontrado' }, 404);
     if (invite.used) return c.json({ error: 'Convite já utilizado' }, 410);
@@ -23,7 +23,7 @@ router.get('/check/:id', async (c) => {
 router.get('/', requireAuth, async (c) => {
   if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const rows  = await db.select().from(invitations)
       .where(eq(invitations.orgId, orgId))
@@ -37,7 +37,7 @@ router.get('/', requireAuth, async (c) => {
 // ── GET /api/invitations/:id ──────────────────────────────────────────────────
 router.get('/:id', requireAuth, async (c) => {
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const [invite] = await db.select().from(invitations)
       .where(and(eq(invitations.id, c.req.param('id')), eq(invitations.orgId, orgId)));
@@ -52,7 +52,7 @@ router.get('/:id', requireAuth, async (c) => {
 router.post('/', requireAuth, async (c) => {
   if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const { role } = await c.req.json<{ role: string }>();
     if (!['socio', 'lider', 'seeder', 'cliente'].includes(role)) return c.json({ error: 'Role inválido' }, 400);
@@ -69,7 +69,7 @@ router.post('/', requireAuth, async (c) => {
 router.delete('/:id', requireAuth, async (c) => {
   if (c.get('userRole') !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const [invite] = await db.select().from(invitations)
       .where(and(eq(invitations.id, c.req.param('id')), eq(invitations.orgId, orgId)));

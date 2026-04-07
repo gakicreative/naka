@@ -1,13 +1,29 @@
-import { drizzle } from 'drizzle-orm/d1';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { pgTable, text, boolean, jsonb } from 'drizzle-orm/pg-core';
+import postgres from 'postgres';
 
-// Cria instância do drizzle a partir do binding D1 do Worker
-export function getDb(d1: D1Database) {
-  return drizzle(d1);
+// Singleton connection — reused across warm serverless invocations
+let _sql: ReturnType<typeof postgres> | null = null;
+
+function getSql() {
+  if (!_sql) {
+    const url = process.env.DATABASE_URL!;
+    _sql = postgres(url, {
+      max: 1,
+      ssl: 'require',
+      // PgBouncer transaction mode doesn't support prepared statements
+      prepare: !url.includes('pgbouncer'),
+    });
+  }
+  return _sql;
+}
+
+export function getDb() {
+  return drizzle(getSql());
 }
 
 // ── Organizations ─────────────────────────────────────────────────────────────
-export const organizations = sqliteTable('organizations', {
+export const organizations = pgTable('organizations', {
   id:        text('id').primaryKey(),
   name:      text('name').notNull(),
   slug:      text('slug').notNull().unique(),
@@ -17,7 +33,7 @@ export const organizations = sqliteTable('organizations', {
 });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
-export const users = sqliteTable('users', {
+export const users = pgTable('users', {
   id:             text('id').primaryKey(),
   email:          text('email').notNull().unique(),
   name:           text('name').notNull(),
@@ -32,11 +48,11 @@ export const users = sqliteTable('users', {
 });
 
 // ── Invitations ───────────────────────────────────────────────────────────────
-export const invitations = sqliteTable('invitations', {
+export const invitations = pgTable('invitations', {
   id:        text('id').primaryKey(),
   orgId:     text('org_id'),
   role:      text('role').notNull(),
-  used:      integer('used', { mode: 'boolean' }).notNull().default(false),
+  used:      boolean('used').notNull().default(false),
   usedBy:    text('used_by'),
   usedAt:    text('used_at'),
   createdBy: text('created_by').notNull(),
@@ -44,12 +60,18 @@ export const invitations = sqliteTable('invitations', {
 });
 
 // ── Entity tables (payload = JSON serializado automaticamente pelo drizzle) ────
-export const clients       = sqliteTable('clients',       { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const projects      = sqliteTable('projects',      { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const tasks         = sqliteTable('tasks',         { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const transactions  = sqliteTable('transactions',  { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const brandhubs     = sqliteTable('brandhubs',     { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const pins          = sqliteTable('pins',          { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const labels        = sqliteTable('labels',        { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const notifications = sqliteTable('notifications', { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
-export const feedbacks     = sqliteTable('feedbacks',     { id: text('id').primaryKey(), orgId: text('org_id'), payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>() });
+const entityCols = () => ({
+  id:      text('id').primaryKey(),
+  orgId:   text('org_id'),
+  payload: jsonb('payload').notNull().$type<Record<string, unknown>>(),
+});
+
+export const clients       = pgTable('clients',       entityCols());
+export const projects      = pgTable('projects',      entityCols());
+export const tasks         = pgTable('tasks',         entityCols());
+export const transactions  = pgTable('transactions',  entityCols());
+export const brandhubs     = pgTable('brandhubs',     entityCols());
+export const pins          = pgTable('pins',          entityCols());
+export const labels        = pgTable('labels',        entityCols());
+export const notifications = pgTable('notifications', entityCols());
+export const feedbacks     = pgTable('feedbacks',     entityCols());

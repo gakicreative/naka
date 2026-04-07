@@ -18,7 +18,7 @@ router.get('/:collection', async (c) => {
   if (!table) return c.json({ error: 'Collection not found' }, 404);
   const orgId = c.get('orgId');
   try {
-    const db   = getDb(c.env.DB);
+    const db   = getDb();
     const rows = await db.select().from(table).where(eq(table.orgId, orgId));
     return c.json(rows.map((r: { payload: unknown }) => r.payload));
   } catch (err) {
@@ -33,7 +33,7 @@ router.post('/:collection', async (c) => {
   if (!table) return c.json({ error: 'Collection not found' }, 404);
   const orgId = c.get('orgId');
   try {
-    const db      = getDb(c.env.DB);
+    const db      = getDb();
     const payload = await c.req.json<Record<string, unknown>>();
     const id      = (payload.id as string) || crypto.randomUUID();
     const data    = { ...payload, id };
@@ -51,7 +51,7 @@ router.patch('/:collection/:id', async (c) => {
   if (!table) return c.json({ error: 'Collection not found' }, 404);
   const orgId = c.get('orgId');
   try {
-    const db   = getDb(c.env.DB);
+    const db   = getDb();
     const [existing] = await db.select().from(table).where(and(eq(table.id, c.req.param('id')), eq(table.orgId, orgId)));
     if (!existing) return c.json({ error: 'Not found' }, 404);
     const body   = await c.req.json<Record<string, unknown>>();
@@ -70,7 +70,7 @@ router.delete('/:collection/:id', async (c) => {
   if (!table) return c.json({ error: 'Collection not found' }, 404);
   const orgId = c.get('orgId');
   try {
-    const db = getDb(c.env.DB);
+    const db = getDb();
     await db.delete(table).where(and(eq(table.id, c.req.param('id')), eq(table.orgId, orgId)));
     return c.json({ ok: true });
   } catch (err) {

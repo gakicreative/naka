@@ -1,13 +1,21 @@
 import { Hono } from 'hono';
 import { requireAuth } from '../auth.js';
 import type { Env } from '../types.js';
+import fs from 'fs';
+import path from 'path';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'];
 const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+const UPLOAD_DIR = './uploads';
+
+// Garante que a pasta de uploads existe
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 const router = new Hono<Env>();
 
-// POST /api/upload — salva arquivo no R2
+// POST /api/upload — salva arquivo no disco local
 router.post('/', requireAuth, async (c) => {
   let formData: FormData;
   try {
@@ -34,9 +42,8 @@ router.post('/', requireAuth, async (c) => {
   const ext = dotIndex >= 0 ? file.name.slice(dotIndex).toLowerCase() : '';
   const key = `${crypto.randomUUID()}${ext}`;
 
-  await c.env.BUCKET.put(key, buffer, {
-    httpMetadata: { contentType: file.type },
-  });
+  const filePath = path.join(UPLOAD_DIR, key);
+  fs.writeFileSync(filePath, Buffer.from(buffer));
 
   return c.json({ url: `/uploads/${key}` });
 });

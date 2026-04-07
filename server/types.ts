@@ -1,17 +1,8 @@
-// Tipagem dos bindings do Cloudflare Worker
-// DB = D1Database, BUCKET = R2Bucket (definidos pelo wrangler.toml)
+// Tipagem do contexto Hono para Node.js standalone
+// Env vars lidas via process.env — sem bindings de plataforma
 
 export type Env = {
-  Bindings: {
-    DB: D1Database;
-    BUCKET: R2Bucket;
-    ASSETS: Fetcher;           // binding dos arquivos estáticos (dist/)
-    JWT_SECRET: string;
-    GOOGLE_CLIENT_ID: string;
-    GOOGLE_CLIENT_SECRET: string;
-    GOOGLE_CALLBACK_URL: string;
-    ADMIN_EMAIL: string;
-  };
+  Bindings: Record<string, never>;
   Variables: {
     userId: string;
     userRole: string;

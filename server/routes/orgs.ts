@@ -18,7 +18,7 @@ router.patch('/me', requireAuth, async (c) => {
     }
 
     const orgId = c.get('orgId');
-    await getDb(c.env.DB).update(organizations).set({ logoUrl }).where(eq(organizations.id, orgId));
+    await getDb().update(organizations).set({ logoUrl }).where(eq(organizations.id, orgId));
     return c.json({ ok: true });
   } catch (err) {
     console.error('Orgs patch error:', err);
@@ -33,7 +33,7 @@ router.delete('/me/logo', requireAuth, async (c) => {
     if (role !== 'admin' && role !== 'socio') return c.json({ error: 'Forbidden' }, 403);
 
     const orgId = c.get('orgId');
-    await getDb(c.env.DB).update(organizations).set({ logoUrl: null }).where(eq(organizations.id, orgId));
+    await getDb().update(organizations).set({ logoUrl: null }).where(eq(organizations.id, orgId));
     return c.json({ ok: true });
   } catch (err) {
     console.error('Orgs delete logo error:', err);

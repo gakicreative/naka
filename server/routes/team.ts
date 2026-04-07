@@ -14,7 +14,7 @@ router.get('/', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const members = await db
       .select({
@@ -41,7 +41,7 @@ router.patch('/:id', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
   try {
-    const db    = getDb(c.env.DB);
+    const db    = getDb();
     const orgId = c.get('orgId');
     const { leaderId } = await c.req.json<{ leaderId: string | null }>();
     // Garante que só altera membros da mesma organização
